@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="ko">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>박스 모델을 구성하는 속성 다루기</title>
+    <style>
+        .block-1 {
+
+            margin-bottom: 100px;
+            margin-left: 20px;
+            margin-top: 40px;
+            margin-right: 50px;
+            /*border 속성*/
+            border: 1px dotted red;
+            /*padding*/
+            padding: 10px 20px 40px 40px;
+        }
+
+        /*마진겹침*/
+        .block-2 {
+            margin: 200px;
+            border: 4px dashed blue;
+            padding: 10px 20px;
+            /*content 속성*/
+            width: 80px;
+            height: 30px;
+        }
+
+        /*인라인영역은 탑과 바텀은 지정할수 없음*/
+        .inline-1 {
+            margin: 100px;
+            border: 3px solid green;
+
+        }
+    </style>
+</head>
+
+<body>
+    <p class="block-1">block-1</p>
+    <p class="block-2">block-2</p>
+    <span class="inline-1">inline-1</span>
+    <span class="inline-2">inline-2</span>
+</body>
+
+</html>

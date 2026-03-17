@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="ko">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>위치 속성으로 html요소 배치하기</title>
+    <style>
+        body {
+            height: 5000px;
+        }
+
+        .box {
+            width: 100px;
+            height: 100px;
+        }
+
+        .red {
+            background-color: red;
+            position: static;
+        }
+
+        .green {
+            background-color: green;
+            position: absolute;
+            right: 100px;
+            bottom: 200px;
+
+        }
+
+        .blue {
+            background-color: blue;
+            position: relative;
+            left: 200px;
+        }
+
+        .purple {
+            background-color: purple;
+            /*웹 화면에 고정된 위치에 지정*/
+            position: fixed;
+
+        }
+
+        .black {
+            background-color: black;
+            /*fixed와 비슷하지만 스크롤을 내리면 고정된위치에 지정*/
+            position: sticky;
+            top: 0;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="box red"></div>
+    <div class="box green"></div>
+    <div class="box blue"></div>
+    <div class="box purple"></div>
+    <div class="box black"></div>
+
+</body>
+
+</html>

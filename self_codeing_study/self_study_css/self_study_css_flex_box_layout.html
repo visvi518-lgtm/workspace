@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html lang="ko">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>플렉스 박스 레이아웃</title>
+    <style>
+        .container {
+            color: white;
+            background-color: #c9c9c9;
+            padding: 1rem;
+
+            display: flex;
+            flex-direction: row;
+            /*flex-direction: row-reverse;*/
+            /*flex-direction: column;*/
+            flex-wrap: wrap;
+            justify-content: center;
+            align-items: baseline;
+        }
+
+        .box {
+            /*width: 400px;*/
+            background-color: red;
+        }
+
+        .box:nth-child(2n) {
+            background-color: orange;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <div class="box">A</div>
+        <div class="box">B</div>
+        <div class="box">C</div>
+    </div>
+</body>
+
+</html>

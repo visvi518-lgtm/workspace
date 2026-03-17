@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="ko">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>애니메이션 속성으로 전환 효과 제어하기</title>
+    <style>
+        .box {
+            width: 100px;
+            height: 100px;
+            background-color: red;
+            animation-name: bgChange;
+            animation-duration: 5s;
+            animation-delay: 0.3s;
+            /*animation-fill-mode: none;*/
+            /*forwards를 많이 씀*/
+            /*animation-fill-mode: forwards;*/
+            /*animation-fill-mode: backwards;*/
+            animation-fill-mode: both;
+            animation-iteration-count: infinite;
+            animation-play-state: paused;
+            animation-direction: reverse;
+        }
+
+        .box:hover {
+            animation-play-state: running;
+        }
+
+        @keyframes bgChange {
+            0% {
+                background-color: blue;
+            }
+
+            25% {
+                background-color: pink;
+            }
+
+            50% {
+                background-color: brown;
+            }
+
+            75% {
+                background-color: aqua;
+            }
+
+            100% {
+                background-color: orange
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <div class="box"></div>
+</body>
+
+</html>

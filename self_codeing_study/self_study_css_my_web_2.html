@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html lang="ko">
+
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-compatible" content="IE-edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>로그인화면</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/7.0.1/css/all.min.css"
+        integrity="sha512-2SwdPD6INVrV/lHTZbO2nodKhrnDdJK9/kg2XD1r9uGqPo1cUbujc+IYdlYdEErWNu69gVcYgdxlmVmzTWnetw=="
+        crossorigin="anonymous" referrerpolicy="no-referrer" />
+    <style>
+        body {
+            margin: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+
+        .login_tag {
+            height: 200px;
+            width: 150px;
+            display: flex;
+            justify-content: center;
+        }
+
+        .item {
+            text-align: center;
+        }
+
+        .login_google {
+            height: 20px;
+            width: 170px;
+            background-color: grey;
+            color: white;
+
+        }
+
+        .login_google:hover {
+            color: black;
+            background-color: white;
+
+            i {
+                color: gray;
+            }
+        }
+
+        i {
+            color: white;
+        }
+
+        .text_or {
+            font-size: 13px;
+            font-weight: 800;
+        }
+
+        .id {
+            font-size: 13px;
+        }
+
+        .password {
+            font-size: 13px;
+        }
+
+        .login_button {
+            height: 20px;
+            width: 170px;
+            font-size: 13px;
+        }
+
+        a {
+            font-size: 13px;
+        }
+    </style>
+</head>
+
+<body>
+    <fieldset>
+        <div class="login_tag">
+            <div class="item">
+                <button class="login_google">
+                    <i class="fa-brands fa-google"></i>
+                    Log in with Google</button>
+                <p class="text_or">or</p>
+                <form action="" method="">
+                    <input type="text" id="id" placeholder="Username">
+                    <br>
+                    <input type="password" id="password" placeholder="Password">
+                </form>
+                <button class="login_button">LOGIN</button>
+                <br>
+                <br>
+                <a href="">Forgot your password?</a>
+            </div>
+
+        </div>
+    </fieldset>
+
+</body>
+
+</html>
