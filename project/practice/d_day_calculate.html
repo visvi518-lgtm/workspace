@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <title>D-Day Calculator</title>
+</head>
+
+<body>
+    <h1>목표일까지: <span id="dday-count"></span></h1>
+
+    <script>
+        function getDday() {
+            const targetDate = new Date("2026-12-31T00:00:00+09:00"); // 목표일 설정
+            const nowDate = new Date();
+            const difference = targetDate - nowDate;
+
+            // 남은 일수 계산
+            const dday = Math.ceil(difference / (1000 * 60 * 60 * 24));
+
+            // 화면에 출력
+            document.getElementById("dday-count").innerText = `D-${dday}`;
+        }
+
+        getDday(); // 페이지 로드 시 실행
+        setInterval(getDday, 1000); // 1초마다 갱신
+    </script>
+</body>
+
+</html>
