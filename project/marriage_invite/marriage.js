@@ -13,8 +13,6 @@ function getDday() {
 
 //음악 자동재생
 function enableSound() {
-            var audio = document.getElementById("myAudio");
+            const audio = document.getElementById("myAudio");
             audio.muted = false; // 버튼 클릭 시 소리 켜기
         }
-
-        

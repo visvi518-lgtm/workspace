@@ -1,0 +1,714 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>MyPortfolio</title>
+    <style>
+      @import url("https://fonts.googleapis.com/css2?family=Syne:wght@400;500;700;800&family=DM+Sans:ital,wght@0,300;0,400;0,500;1,300&display=swap");
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+      :root {
+        --syne: "Syne", sans-serif;
+        --dm: "DM Sans", sans-serif;
+        --accent: #1d9e75;
+        --accent-light: #e1f5ee;
+        --accent-mid: #0f6e56;
+      }
+      body,
+      .wrap {
+        font-family: var(--dm);
+      }
+      .wrap {
+        min-height: 100vh;
+        background: var(--color-background-tertiary);
+      }
+      nav {
+        position: sticky;
+        top: 0;
+        z-index: 100;
+        background: var(--color-background-primary);
+        border-bottom: 0.5px solid var(--color-border-tertiary);
+        padding: 0 2rem;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        height: 56px;
+      }
+      .nav-logo {
+        font-family: var(--syne);
+        font-size: 18px;
+        font-weight: 800;
+        color: var(--color-text-primary);
+        letter-spacing: -0.5px;
+      }
+      .nav-links {
+        display: flex;
+        gap: 2rem;
+      }
+      .nav-links a {
+        font-size: 13px;
+        font-weight: 400;
+        color: var(--color-text-secondary);
+        text-decoration: none;
+        cursor: pointer;
+        transition: color 0.2s;
+      }
+      .nav-links a:hover {
+        color: var(--accent);
+      }
+      .hero {
+        background: var(--color-background-primary);
+        padding: 5rem 2rem 4rem;
+        border-bottom: 0.5px solid var(--color-border-tertiary);
+      }
+      .hero-inner {
+        max-width: 760px;
+        margin: 0 auto;
+      }
+      .hero-tag {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        background: var(--accent-light);
+        color: var(--accent-mid);
+        font-size: 12px;
+        font-weight: 500;
+        letter-spacing: 0.5px;
+        padding: 4px 12px;
+        border-radius: 20px;
+        margin-bottom: 1.5rem;
+      }
+      .hero-dot {
+        width: 7px;
+        height: 7px;
+        border-radius: 50%;
+        background: var(--accent);
+        display: inline-block;
+        animation: pulse 2s infinite;
+      }
+      @keyframes pulse {
+        0%,
+        100% {
+          opacity: 1;
+        }
+        50% {
+          opacity: 0.4;
+        }
+      }
+      .hero-name {
+        font-family: var(--syne);
+        font-size: clamp(1.4rem, 3.5vw, 2rem);
+        font-weight: 800;
+        color: var(--color-text-primary);
+        letter-spacing: -0.5px;
+        margin-bottom: 0.3rem;
+      }
+      .hero h1 {
+        font-family: var(--syne);
+        font-size: clamp(2.2rem, 5vw, 3.5rem);
+        font-weight: 800;
+        line-height: 1.1;
+        letter-spacing: -1px;
+        color: var(--color-text-primary);
+        margin-bottom: 1.2rem;
+      }
+      .hero h1 span {
+        color: var(--accent);
+      }
+      .hero-sub {
+        font-size: 16px;
+        line-height: 1.7;
+        color: var(--color-text-secondary);
+        max-width: 520px;
+        margin-bottom: 2rem;
+      }
+      .hero-links {
+        display: flex;
+        gap: 12px;
+        flex-wrap: wrap;
+      }
+      .btn-primary {
+        background: var(--accent);
+        color: #fff;
+        border: none;
+        border-radius: 8px;
+        padding: 10px 20px;
+        font-size: 14px;
+        font-weight: 500;
+        cursor: pointer;
+        font-family: var(--dm);
+        transition:
+          background 0.2s,
+          transform 0.1s;
+      }
+      .btn-primary:hover {
+        background: var(--accent-mid);
+      }
+      .btn-primary:active {
+        transform: scale(0.98);
+      }
+      .btn-ghost {
+        background: transparent;
+        color: var(--color-text-secondary);
+        border: 0.5px solid var(--color-border-secondary);
+        border-radius: 8px;
+        padding: 10px 20px;
+        font-size: 14px;
+        font-weight: 400;
+        cursor: pointer;
+        font-family: var(--dm);
+        transition:
+          border-color 0.2s,
+          color 0.2s;
+      }
+      .btn-ghost:hover {
+        border-color: var(--accent);
+        color: var(--accent);
+      }
+      section {
+        padding: 3.5rem 2rem;
+      }
+      .section-inner {
+        max-width: 760px;
+        margin: 0 auto;
+      }
+      .section-label {
+        font-size: 11px;
+        font-weight: 500;
+        letter-spacing: 1.5px;
+        color: var(--accent);
+        text-transform: uppercase;
+        margin-bottom: 0.5rem;
+      }
+      .section-title {
+        font-family: var(--syne);
+        font-size: 1.6rem;
+        font-weight: 700;
+        color: var(--color-text-primary);
+        margin-bottom: 2rem;
+        letter-spacing: -0.3px;
+      }
+      .skills-section {
+        background: var(--color-background-primary);
+      }
+      .skills-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(110px, 1fr));
+        gap: 10px;
+      }
+      .skill-chip {
+        background: var(--color-background-secondary);
+        border: 0.5px solid var(--color-border-tertiary);
+        border-radius: 8px;
+        padding: 10px 14px;
+        text-align: center;
+      }
+      .skill-chip .skill-icon {
+        font-size: 20px;
+        margin-bottom: 6px;
+        display: block;
+      }
+      .skill-chip .skill-name {
+        font-size: 12px;
+        font-weight: 500;
+        color: var(--color-text-primary);
+      }
+      .skill-chip .skill-level {
+        font-size: 11px;
+        color: var(--color-text-secondary);
+        margin-top: 2px;
+      }
+      .projects-section {
+        background: var(--color-background-tertiary);
+      }
+      .projects-grid {
+        display: flex;
+        flex-direction: column;
+        gap: 1rem;
+      }
+      .project-card {
+        background: var(--color-background-primary);
+        border: 0.5px solid var(--color-border-tertiary);
+        border-radius: 12px;
+        padding: 1.5rem;
+        cursor: pointer;
+        transition:
+          border-color 0.2s,
+          transform 0.15s;
+      }
+      .project-card:hover {
+        border-color: var(--accent);
+        transform: translateY(-2px);
+      }
+      .project-header {
+        display: flex;
+        align-items: flex-start;
+        justify-content: space-between;
+        gap: 1rem;
+        margin-bottom: 0.8rem;
+      }
+      .project-num {
+        font-family: var(--syne);
+        font-size: 11px;
+        font-weight: 700;
+        color: var(--accent);
+        letter-spacing: 1px;
+        margin-bottom: 4px;
+      }
+      .project-name {
+        font-family: var(--syne);
+        font-size: 1.05rem;
+        font-weight: 700;
+        color: var(--color-text-primary);
+        line-height: 1.3;
+      }
+      .project-arrow {
+        font-size: 18px;
+        color: var(--color-text-secondary);
+        flex-shrink: 0;
+        margin-top: 2px;
+        transition: transform 0.2s;
+      }
+      .project-desc {
+        font-size: 13px;
+        line-height: 1.65;
+        color: var(--color-text-secondary);
+        margin-bottom: 1rem;
+      }
+      .project-features {
+        display: none;
+        flex-direction: column;
+        gap: 6px;
+        margin-bottom: 1rem;
+      }
+      .project-card.open .project-features {
+        display: flex;
+      }
+      .project-card.open .project-arrow {
+        transform: rotate(90deg);
+      }
+      .feature-item {
+        display: flex;
+        align-items: flex-start;
+        gap: 8px;
+        font-size: 13px;
+        color: var(--color-text-secondary);
+        line-height: 1.5;
+      }
+      .feature-dot {
+        width: 5px;
+        height: 5px;
+        border-radius: 50%;
+        background: var(--accent);
+        flex-shrink: 0;
+        margin-top: 7px;
+      }
+      .project-tags {
+        display: flex;
+        gap: 6px;
+        flex-wrap: wrap;
+      }
+      .tag {
+        font-size: 11px;
+        font-weight: 500;
+        background: var(--accent-light);
+        color: var(--accent-mid);
+        padding: 3px 10px;
+        border-radius: 20px;
+      }
+      .tag-gray {
+        font-size: 11px;
+        font-weight: 500;
+        background: var(--color-background-secondary);
+        color: var(--color-text-secondary);
+        padding: 3px 10px;
+        border-radius: 20px;
+      }
+      .edu-section {
+        background: var(--color-background-primary);
+      }
+      .edu-list {
+        display: flex;
+        flex-direction: column;
+        gap: 1rem;
+      }
+      .edu-card {
+        background: var(--color-background-secondary);
+        border-radius: 10px;
+        border: 0.5px solid var(--color-border-tertiary);
+        padding: 1.2rem 1.4rem;
+        display: flex;
+        align-items: flex-start;
+        gap: 1rem;
+      }
+      .edu-icon {
+        width: 38px;
+        height: 38px;
+        border-radius: 8px;
+        background: var(--accent-light);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 18px;
+        flex-shrink: 0;
+      }
+      .edu-school {
+        font-size: 14px;
+        font-weight: 500;
+        color: var(--color-text-primary);
+        margin-bottom: 3px;
+      }
+      .edu-major {
+        font-size: 13px;
+        color: var(--color-text-secondary);
+      }
+      .edu-status {
+        font-size: 11px;
+        font-weight: 500;
+        color: var(--accent);
+        margin-top: 4px;
+      }
+      .contact-section {
+        background: var(--color-background-tertiary);
+      }
+      .contact-card {
+        background: var(--color-background-primary);
+        border: 0.5px solid var(--color-border-tertiary);
+        border-radius: 12px;
+        padding: 2rem;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 1rem;
+        flex-wrap: wrap;
+      }
+      .contact-email {
+        font-family: var(--syne);
+        font-size: 1.1rem;
+        font-weight: 700;
+        color: var(--color-text-primary);
+      }
+      .contact-sub {
+        font-size: 13px;
+        color: var(--color-text-secondary);
+        margin-top: 4px;
+      }
+      footer {
+        background: var(--color-background-primary);
+        border-top: 0.5px solid var(--color-border-tertiary);
+        padding: 1.5rem 2rem;
+        text-align: center;
+      }
+      footer p {
+        font-size: 12px;
+        color: var(--color-text-secondary);
+      }
+    </style>
+  </head>
+  <body>
+    <div class="wrap">
+      <nav>
+        <!-- 이름 입력 위치 (nav-logo) -->
+        <span class="nav-logo">문수환의 portfolio</span>
+        <div class="nav-links">
+          <a
+            onclick="
+              document
+                .getElementById('skills')
+                .scrollIntoView({ behavior: 'smooth' })
+            "
+            >Skills</a
+          >
+          <a
+            onclick="
+              document
+                .getElementById('projects')
+                .scrollIntoView({ behavior: 'smooth' })
+            "
+            >Projects</a
+          >
+          <a
+            onclick="
+              document
+                .getElementById('education')
+                .scrollIntoView({ behavior: 'smooth' })
+            "
+            >Education</a
+          >
+          <a
+            onclick="
+              document
+                .getElementById('contact')
+                .scrollIntoView({ behavior: 'smooth' })
+            "
+            >Contact</a
+          >
+        </div>
+      </nav>
+
+      <div class="hero">
+        <div class="hero-inner">
+          <div class="hero-tag">
+            <span class="hero-dot"></span> Available for opportunities
+          </div>
+          <!-- 이름 입력 위치 (hero 대제목 위) -->
+          <div class="hero-name">문수환</div>
+          <h1>Frontend<br /><span>Developer</span></h1>
+          <p class="hero-sub">
+            HTML · CSS · JavaScript를 활용해 사용자 경험을 중심으로 웹 서비스를
+            개발합니다. QR 기반 주문 시스템, EMR 시스템, 모바일 청첩장 등
+            실용적인 프로젝트를 직접 기획하고 구현했습니다.
+          </p>
+          <div class="hero-links">
+            <button
+              class="btn-primary"
+              onclick="
+                document
+                  .getElementById('projects')
+                  .scrollIntoView({ behavior: 'smooth' })
+              "
+            >
+              프로젝트 보기
+            </button>
+            <button
+              class="btn-ghost"
+              onclick="
+                document
+                  .getElementById('contact')
+                  .scrollIntoView({ behavior: 'smooth' })
+              "
+            >
+              연락하기
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <section class="skills-section" id="skills">
+        <div class="section-inner">
+          <div class="section-label">Skills</div>
+          <div class="section-title">사용 가능한 기술</div>
+          <div class="skills-grid">
+            <div class="skill-chip">
+              <span class="skill-icon">🌐</span>
+              <div class="skill-name">HTML</div>
+              <div class="skill-level">활용</div>
+            </div>
+            <div class="skill-chip">
+              <span class="skill-icon">🎨</span>
+              <div class="skill-name">CSS</div>
+              <div class="skill-level">활용</div>
+            </div>
+            <div class="skill-chip">
+              <span class="skill-icon">⚡</span>
+              <div class="skill-name">JavaScript</div>
+              <div class="skill-level">활용</div>
+            </div>
+            <div class="skill-chip">
+              <span class="skill-icon">🐍</span>
+              <div class="skill-name">Python</div>
+              <div class="skill-level">활용</div>
+            </div>
+            <div class="skill-chip">
+              <span class="skill-icon">☕</span>
+              <div class="skill-name">Java</div>
+              <div class="skill-level">기초</div>
+            </div>
+            <div class="skill-chip">
+              <span class="skill-icon">⚙️</span>
+              <div class="skill-name">C</div>
+              <div class="skill-level">기초</div>
+            </div>
+            <div class="skill-chip">
+              <span class="skill-icon">🗂️</span>
+              <div class="skill-name">SQLite</div>
+              <div class="skill-level">활용</div>
+            </div>
+            <div class="skill-chip">
+              <span class="skill-icon">📋</span>
+              <div class="skill-name">Jira</div>
+              <div class="skill-level">활용</div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section class="projects-section" id="projects">
+        <div class="section-inner">
+          <div class="section-label">Projects</div>
+          <div class="section-title">진행한 프로젝트</div>
+          <div class="projects-grid">
+            <div class="project-card" onclick="this.classList.toggle('open')">
+              <div class="project-header">
+                <div>
+                  <div class="project-num">01</div>
+                  <div class="project-name">QR코드 물품 주문 웹</div>
+                </div>
+                <div class="project-arrow">›</div>
+              </div>
+              <p class="project-desc">
+                QR코드를 스캔하면 바로 접속 가능한 물품 주문 시스템. 관리자와
+                주문자를 구분하여 주문 내역 관리 및 엑셀 다운로드 기능을
+                제공합니다.
+              </p>
+              <div class="project-features">
+                <div class="feature-item">
+                  <span class="feature-dot"></span>QR코드 링크를 통해 별도 설치
+                  없이 웹에서 바로 주문 가능
+                </div>
+                <div class="feature-item">
+                  <span class="feature-dot"></span>관리자 아이디로 주문자 /
+                  관리자 화면 분리
+                </div>
+                <div class="feature-item">
+                  <span class="feature-dot"></span>주문 내역 엑셀(.xlsx)
+                  다운로드 기능
+                </div>
+                <div class="feature-item">
+                  <span class="feature-dot"></span>기존 고객 명단 업로드 시 주소
+                  자동 입력
+                </div>
+                <div class="feature-item">
+                  <span class="feature-dot"></span>Render를 통해 무료 배포
+                </div>
+              </div>
+              <div class="project-tags">
+                <span class="tag">HTML</span>
+                <span class="tag">CSS</span>
+                <span class="tag">JavaScript</span>
+                <span class="tag-gray">Render 배포</span>
+              </div>
+            </div>
+
+            <div class="project-card" onclick="this.classList.toggle('open')">
+              <div class="project-header">
+                <div>
+                  <div class="project-num">02</div>
+                  <div class="project-name">Python 기반 EMR 시스템</div>
+                </div>
+                <div class="project-arrow">›</div>
+              </div>
+              <p class="project-desc">
+                환자 관리, 처방, 외래를 통합 관리하는 전자의무기록 시스템.
+                응급구조과 전공 배경을 살려 의료 현장의 실제 니즈를
+                반영했습니다.
+              </p>
+              <div class="project-features">
+                <div class="feature-item">
+                  <span class="feature-dot"></span>환자 등록 시 번호 자동 부여로
+                  체계적인 환자 관리
+                </div>
+                <div class="feature-item">
+                  <span class="feature-dot"></span>처방 및 외래 기록에 날짜·시간
+                  자동 저장
+                </div>
+                <div class="feature-item">
+                  <span class="feature-dot"></span>관리자 계정 별도 운영으로
+                  개인정보 보안 강화
+                </div>
+                <div class="feature-item">
+                  <span class="feature-dot"></span>SQLite 기반 경량 DB로 설치
+                  없이 운용 가능
+                </div>
+              </div>
+              <div class="project-tags">
+                <span class="tag">Python</span>
+                <span class="tag-gray">SQLite</span>
+              </div>
+            </div>
+
+            <div class="project-card" onclick="this.classList.toggle('open')">
+              <div class="project-header">
+                <div>
+                  <div class="project-num">03</div>
+                  <div class="project-name">모바일 청첩장 웹페이지</div>
+                </div>
+                <div class="project-arrow">›</div>
+              </div>
+              <p class="project-desc">
+                트랜지션 애니메이션과 배경음악이 자동 재생되는 반응형 모바일
+                청첩장. 네이버지도 API와 D-Day 카운터를 포함합니다.
+              </p>
+              <div class="project-features">
+                <div class="feature-item">
+                  <span class="feature-dot"></span>페이지 진입 시 트랜지션
+                  애니메이션 및 배경음악 자동 재생
+                </div>
+                <div class="feature-item">
+                  <span class="feature-dot"></span>모바일·PC 화면 크기에
+                  유동적으로 반응하는 반응형 레이아웃
+                </div>
+                <div class="feature-item">
+                  <span class="feature-dot"></span>네이버지도 API를 활용한 식장
+                  위치 안내 지도
+                </div>
+                <div class="feature-item">
+                  <span class="feature-dot"></span>D-Day 자동 계산 후 상단에
+                  실시간 표시
+                </div>
+              </div>
+              <div class="project-tags">
+                <span class="tag">HTML</span>
+                <span class="tag">CSS</span>
+                <span class="tag">JavaScript</span>
+                <span class="tag-gray">Naver Map API</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section class="edu-section" id="education">
+        <div class="section-inner">
+          <div class="section-label">Education</div>
+          <div class="section-title">학력</div>
+          <div class="edu-list">
+            <div class="edu-card">
+              <div class="edu-icon">🎓</div>
+              <div>
+                <div class="edu-school">제주한라대학교</div>
+                <div class="edu-major">응급구조과</div>
+                <div class="edu-status">졸업</div>
+              </div>
+            </div>
+            <div class="edu-card">
+              <div class="edu-icon">💻</div>
+              <div>
+                <div class="edu-school">한국방송통신대학교</div>
+                <div class="edu-major">컴퓨터과학과</div>
+                <div class="edu-status">재학 중 (3학년)</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section class="contact-section" id="contact">
+        <div class="section-inner">
+          <div class="section-label">Contact</div>
+          <div class="section-title">연락처</div>
+          <div class="contact-card">
+            <div>
+              <div class="contact-email">visvi518@gmail.com</div>
+              <div class="contact-sub">언제든지 편하게 연락 주세요</div>
+            </div>
+            <button
+              class="btn-primary"
+              onclick="window.location.href = 'mailto:visvi518@gmail.com'"
+            >
+              이메일 보내기
+            </button>
+          </div>
+        </div>
+      </section>
+
+      <footer>
+        <p>Frontend Developer Portfolio · Built with HTML, CSS, JavaScript</p>
+      </footer>
+    </div>
+  </body>
+</html>
