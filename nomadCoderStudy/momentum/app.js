@@ -1,19 +1,50 @@
 const loginForm = document.querySelector("#login-form");
 const loginInput = document.querySelector("#login-form input");
-const link = document.querySelector("a");
+const greeting = document.querySelector("#greeting");
+const usernameDeleteButton = document.querySelector("#usernameDelete");
 
-function onLiginSubmit(event){
+const HIDDEN_CLASSNAME = "hidden";
+const USERNAME_KEY = "username";
+
+
+function onLoginSubmit(event) {
     event.preventDefault();
-    console.log(loginInput.value);
+    loginForm.classList.add(HIDDEN_CLASSNAME);
+    const username = loginInput.value;
+    localStorage.setItem(USERNAME_KEY, username);
+    paintGreetings(username);
+    
+    /* 로그남기기 */
+    console.log(`console log username`)
+    console.log(`username : "${username}"`);
+    console.log(`localstorage.username : "${localStorage.username}"`);
+    console.log(`coment : "Hello ${username}"`);
 }
 
-function handleLinkClick(event){
-    event.preventDefault();
-    console.log(event)
-    console.dir(event);
-
+function paintGreetings(username){
+    greeting.innerText = `Hello ${username}`;
+    greeting.classList.remove(HIDDEN_CLASSNAME);
+    usernameDeleteButton.classList.remove(HIDDEN_CLASSNAME);
 }
 
-loginForm.addEventListener("submit", onLiginSubmit);
-link.addEventListener("click", handleLinkClick);
+const savedUsername = localStorage.getItem(USERNAME_KEY);
 
+if(savedUsername === null) {
+    //show the form
+    loginForm.classList.remove(HIDDEN_CLASSNAME);
+    loginForm.addEventListener("submit", onLoginSubmit);
+    console.log(`usernameNotExist`);
+}else{
+    //show the greeting
+    paintGreetings(savedUsername);
+    console.log(`savedUsername : ${savedUsername}`);
+}
+
+function usernameDeleteHandle(event){
+    alert(`username deleted`);
+    localStorage.removeItem(USERNAME_KEY);
+    console.log(`deletedUsername`);
+    console.log(`savedUsername : ${savedUsername}`);
+}
+
+usernameDeleteButton.addEventListener("click", usernameDeleteHandle);

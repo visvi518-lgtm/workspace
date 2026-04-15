@@ -7,16 +7,17 @@
     <title>Momentum App</title>
   </head>
   <body>
-    <form id="login-form">
-      <a href="https://nomadcoders.co">Go to courses</a>
+    <form class="hidden" id="login-form">
       <input
         required
         maxlength="15"
         type="text"
-        placeholder="what is your name"
+        placeholder="enter your name"
       />
-      <button>Log In</button>
+      <input type="submit" value="log In" />
     </form>
+    <h1 id="greeting" class="hidden"></h1>
+    <button id="usernameDelete" class="hidden">삭제</button>
     <script src="app.js"></script>
   </body>
 </html>
