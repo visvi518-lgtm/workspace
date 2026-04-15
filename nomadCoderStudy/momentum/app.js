@@ -22,17 +22,23 @@ function onLoginSubmit(event) {
 }
 
 function paintGreetings(username){
-    greeting.innerText = `Hello ${username}`;
+    greeting.innerText = `Hello ${username}!!`;
     greeting.classList.remove(HIDDEN_CLASSNAME);
     usernameDeleteButton.classList.remove(HIDDEN_CLASSNAME);
 }
 
+function enterUsername(){
+    loginForm.classList.remove(HIDDEN_CLASSNAME);
+    loginForm.addEventListener("submit", onLoginSubmit);
+    console.log(`savedUsername : ${savedUsername}`);
+}
+
 const savedUsername = localStorage.getItem(USERNAME_KEY);
+
 
 if(savedUsername === null) {
     //show the form
-    loginForm.classList.remove(HIDDEN_CLASSNAME);
-    loginForm.addEventListener("submit", onLoginSubmit);
+    enterUsername(savedUsername);
     console.log(`usernameNotExist`);
 }else{
     //show the greeting
@@ -46,5 +52,6 @@ function usernameDeleteHandle(event){
     console.log(`deletedUsername`);
     console.log(`savedUsername : ${savedUsername}`);
 }
+
 
 usernameDeleteButton.addEventListener("click", usernameDeleteHandle);
