@@ -6,6 +6,7 @@ const usernameDeleteButton = document.querySelector("#usernameDelete");
 const HIDDEN_CLASSNAME = "hidden";
 const USERNAME_KEY = "username";
 
+const date = new Date();
 
 function onLoginSubmit(event) {
     event.preventDefault();
@@ -15,11 +16,13 @@ function onLoginSubmit(event) {
     paintGreetings(username);
     
     /* 로그남기기 */
-    console.log(`console log username`)
+    console.log(`console log : user login`)
+    console.log(`login time : ${date}`);
     console.log(`username : "${username}"`);
     console.log(`localstorage.username : "${localStorage.username}"`);
     console.log(`coment : "Hello ${username}"`);
 }
+
 
 function paintGreetings(username){
     greeting.innerText = `Hello ${username}!!`;
