@@ -11,7 +11,7 @@ body {
     justify-content: center;
 }
 .contentMain{
-    background-image: url(./pastel-pink-emboss-textile-textured.jpg);
+    background-image: url(img/pastel-pink-emboss-textile-textured.jpg);
     margin: 0;
     
 }
@@ -104,7 +104,7 @@ header {
     position: relative;
     width: 100%;
     height: 100vh;
-    background-image: url(./KakaoTalk_20260403_092456714.png);
+    background-image: url(img/KakaoTalk_20260403_092456714.png);
     background-size: contain;
     background-position: center;
     background-repeat: no-repeat;
@@ -112,7 +112,7 @@ header {
     align-items: center;
 }
 .imageMain:hover {
-    background-image: url(./KakaoTalk_20260403_120914632.png);
+    background-image: url(img/KakaoTalk_20260403_120914632.png);
 }
 
 /* 이미지 그라데이션 */
@@ -125,7 +125,7 @@ header {
     position: relative;
     width: 100%;
     height: 100vh;
-    background-image: url(./weddingPlace.png);
+    background-image: url(img/weddingPlace.png);
     background-size: contain;
     background-position: center;
     align-items: center;
