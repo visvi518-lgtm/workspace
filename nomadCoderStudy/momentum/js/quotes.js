@@ -35,20 +35,18 @@ const quote = document.querySelector("#quote span:first-child");
 const author = document.querySelector("#quote span:last-child");
 
 const randomNumber = Math.floor(Math.random()*quotes.length);
-const todaysQuotes = quotes[Math.floor(Math.random()*quotes.length)];
+const todaysQuotes = quotes[randomNumber];
 
 quote.innerText = todaysQuotes.quote;
 author.innerText = todaysQuotes.author;
 
 
 
-function randomNumberQuotes(){
-    console.log("1번째 명언" , quotes[0]);
-    console.log("9번째 명언", quotes[9]);
+function randomNumberQuotesLog(){
     console.log(`랜덤상수 : `, randomNumber);
     console.log(`랜덤상수 `,randomNumber,`번째의 명언: `, quotes[randomNumber])
 }
 
 
 
-randomNumberQuotes();
+randomNumberQuotesLog();
