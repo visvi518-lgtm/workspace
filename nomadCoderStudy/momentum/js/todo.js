@@ -12,7 +12,14 @@ function saveToDos(){
 
 function deleteTodo(event){
     const li = event.target.parentElement;
+    console.log(`삭제할 list의 id : `,li.id);
+    console.log(`type of before change id : `, typeof(li.id));
+    const idIntoNum = parseInt(li.id);
+    console.log(`type of after change id : `, typeof(idIntoNum));
     li.remove();
+    toDos = toDos.filter(toDo => toDo.id !== idIntoNum);
+    saveToDos();
+    console.log(`after delete id : `, toDos)
 }
 
 function paintToDo(newTodo){
@@ -55,4 +62,3 @@ if(savedToDos !==null){
     toDos = parsedToDos;
     parsedToDos.forEach(paintToDo);
 }
-
