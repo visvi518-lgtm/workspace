@@ -1,159 +1,136 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="ko">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>marriage_invite</title>
-    <link rel="stylesheet" href="style.css">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/7.0.1/css/all.min.css" />
-</head>
+    <head>
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <title>marriage_invite</title>
+        <link rel="stylesheet" href="style.css" />
+        <link
+            rel="stylesheet"
+            href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/7.0.1/css/all.min.css"
+        />
+    </head>
 
+    <body>
+        <div id="contentMain">
+            <header>
+                <!-- 결혼식 d-day -->
+                <p id="ddayMinus"><span id="dday-count"></span></p>
 
-<body>
-    <div class="contentMain">
-        <header>
-    <!-- 결혼식 d-day -->
-            <p class="ddayMinus"><span id="dday-count"></span></p>
+                <!-- 음악재생 -->
+                <audio
+                    id="myAudio"
+                    src="bgm/DAY6(데이식스) - 한 페이지가 될 수 있게 [가사_Lyrics] - 웅키.mp3"
+                    controls
+                    autoplay
+                    muted
+                    loop
+                ></audio>
+                <i class="fa-solid fa-headphones" onclick="enableSound()"></i>
+            </header>
 
-
-    <!-- 음악재생 -->
-            <audio id="myAudio" src="bgm/DAY6(데이식스) - 한 페이지가 될 수 있게 [가사_Lyrics] - 웅키.mp3" controls autoplay muted loop></audio>
-            <i class="fa-solid fa-headphones" onclick="enableSound()"></i>
-        </header>
-
-    <!-- 본문 -->
-        <div class="main">
-
-    <!-- 결혼사진 -->
-            <div class="imageContainer">
-                <div class="imageMain"></div>
-            </div>
-
-    <!-- 본문내용 -->
-            <div class="mainComent">
-                <h1>11.29</h1>
-                <p class="underBar">-------</p>
-            
-                <div class="date-place">
-                    <h2>2026.11.29 PM 3:00</h2>
-                    <h2>보타닉파크 웨딩 오키드 홀</h2>
+            <!-- 본문 -->
+            <div id="main">
+                <!-- 결혼사진 -->
+                <div id="imageContainer">
+                    <div id="imageMain"></div>
                 </div>
-    <!-- 이름배치 -->
-                <div class="nameAnd">
-                    <div class="name">
-                        <h2>문수환</h2>
-                        <h3>그리고</h3>
-                        <h2>한승경</h2>
+
+                <!-- 본문내용 -->
+                <div id="mainComent">
+                    <h1>11.29</h1>
+                    <p ids="underBar">-------</p>
+
+                    <div id="date-place">
+                        <h2>2026.11.29 PM 3:00</h2>
+                        <h2>보타닉파크 웨딩 오키드 홀</h2>
+                    </div>
+                    <!-- 이름배치 -->
+                    <div id="nameAnd">
+                        <div id="name">
+                            <h2>문수환</h2>
+                            <h3>그리고</h3>
+                            <h2>한승경</h2>
+                        </div>
                     </div>
                 </div>
             </div>
-        </div>
-    <br>
-    <br>
+            <br />
+            <br />
 
-    <!-- 축하코멘트 -->
-        <div class="coment">
-            <p class='comentInvite'>
-                서로를 존중하고 아껴주며 함께 걸어갈 사람을 만났습니다.
-            </p>
-            <br>
-            <p class="comentInvite2">
-                서로의 하루를 닮아가며 평생의 여정을 함께 하려 합니다.
-            </p>
-            <p class="comentInvite3">
-                따뜻한 마음으로 축복해주세요.
-            </p>
-        </div>
-    <br>
-    <br>
+            <!-- 축하코멘트 -->
+            <div id="coment">
+                <p>서로를 존중하고 아껴주며 함께 걸어갈 사람을 만났습니다.</p>
+                <br />
+                <p>서로의 하루를 닮아가며 평생의 여정을 함께 하려 합니다.</p>
+                <p>따뜻한 마음으로 축복해주세요.</p>
+            </div>
+            <br />
+            <br />
 
+            <!-- 가족소개 -->
+            <div id="familyRelationship">
+                <div id="maleFamily">
+                    <h3>문영신 박혜희</h3>
+                    <p id="maleSon">의 장남 수환</p>
+                </div>
+                <div id="femaleFamily">
+                    <h3>한범석 박숙자</h3>
+                    <p id="femaleDauther">의 차녀 승경</p>
+                </div>
+            </div>
 
+            <!-- 달력 페이지 -->
+            <div id="calinder">달력페이지</div>
 
-    <!-- 가족소개 -->
-        <div class="familyRelationship">
-            <div class="maleFamily">
-                <h3 class="male">
-                    문영신   박혜희
-                </h3>
-                <p class="maleSon">
-                    의 장남 수환
+            <br />
+            <br />
+
+            <!-- 갤러리 -->
+            <div id="gallery">갤러리</div>
+
+            <!-- 홀위치 지도 -->
+            <div id="navigate">
+                <h2>오시는 길</h2>
+                <br />
+                <p id="place2">보타닉파크 오키드 홀</p>
+                <p id="place3">
+                    서울 강서구 마곡중앙5로 6 보타닉푸르지오시티 L층(로비층)
                 </p>
+                <div id="weddingMapContainer">
+                    <div id="weddingMapImage"></div>
+                </div>
+                <div id="mapButton">
+                    <button id="tMap">티맵</button>
+                    <button id="naverMap">네이버맵</button>
+                    <button id="kakaoMap">카카오맵</button>
+                </div>
             </div>
-            <div class="femaleFamily">
-                <h3 class="female">
-                    한범석  박숙자
-                </h3>
-                <p class="femaledauther">
-                    의 차녀 승경
-                </p>
-            </div>
-        </div>
-
-    <!-- 달력 페이지 -->
-        </div class="calinder">달력페이지</div>
-
-    <br>
-    <br>
-    
-
-    <!-- 갤러리 -->
-        <div class="gallery">갤러리
-            
-
-        </div>
-
-    <!-- 홀위치 지도 -->
-        <div class="navigate">
-            <h2>오시는 길</h2>
-            <br>
-            <p class="place2">보타닉파크 오키드 홀</p>
-            <p class="place3">서울 강서구 마곡중앙5로 6 보타닉푸르지오시티 L층(로비층)</p>
-            <div class="weddingMapContainer">
-                <div class="weddingMapImage"></div>
-            </div>
-            <div class="mapButton">
-                <button class="tMap">티맵</button>
-                <button class="naverMap">네이버맵</button>
-                <button class="kakaoMap">카카오맵</button>
-            </div>
-        </div>
-    <!-- 네이버 지도맵 -->
-    <!--     <div class="weddingmap3">
+            <!-- 네이버 지도맵 -->
+            <!--     <div class="weddingmap3">
             <section class="section" id="section-3">
                 <h1>오시는 길</h1>
                 <div id="map" style="width: 70%; height: 300px; margin:auto"></div>
                 <code id="snippet" class="snippet"></code>
             </section>
         </div> -->
-    
-    
-    <!-- 게스트 스냅 -->
-    <div class="guestSnapPhoto">게스트 스냅
 
-    </div>
+            <!-- 게스트 스냅 -->
+            <div id="guestSnapPhoto">게스트 스냅</div>
 
-        
-
-
-    <!-- 방명록 -->
-        <div class="visitComent">방명록
-
+            <!-- 방명록 -->
+            <div id="visitComent">방명록</div>
         </div>
-
-
-
-
-    </div>
-    <!-- 자바스크립트 -->
+        <!-- 자바스크립트 -->
         <script src="js/dDayMinus.js"></script>
         <script src="js/musicAutoPlay.js"></script>
 
-    <!-- 네이버 지도 맵 -->
-    <!--     <script type="text/javascript"
+        <!-- 네이버 지도 맵 -->
+        <!--     <script type="text/javascript"
             src="https://openapi.map.naver.com/openapi/v3/maps.js?ncpClientId=[SUlcgA0FuYtRSukVapiAV9pHkFCzecx6xTr7Xsyj]"></script>
         <script id="code">
             var mapDiv = document.getElementById('map');
             var map = new naver.maps.Map(mapDiv);
         </script> -->
-</body>
+    </body>
 </html>

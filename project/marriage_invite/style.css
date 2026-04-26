@@ -10,14 +10,14 @@ body {
     margin: 0 auto;
     justify-content: center;
 }
-.contentMain{
+#contentMain{
     background-image: url(img/pastel-pink-emboss-textile-textured.jpg);
     margin: 0;
     
 }
 
 /* 메인 css */
-/* .main{
+/* #main{
 
 } */
 
@@ -37,7 +37,7 @@ h1{
     margin-bottom: 0px;
 }
 
-.underBar{
+#underBar{
     font-family: 'Nanum Pen Script', sans-serif;
     margin-top: 0;
     align-items: center;
@@ -45,30 +45,30 @@ h1{
     margin-bottom: 25px;
 }
 
-.nameAnd{
+#nameAnd{
     margin-top: 40px;
 }
-.coment,
-.maleSon,
-.femaledauther,
-.place2,
-.place3,
-.ddayMinus{
+#coment,
+#maleSon,
+#femaleDauther,
+#place2,
+#place3,
+#ddayMinus{
     font-family: 'Nanum Pen Script', sans-serif;
     align-items: center;
     text-align: center;
 }
 
 /* 코멘트 사이 간격 */
-.maleFamily,
-.femaleFamily{
+#maleFamily,
+#femaleFamily{
     display: flex;
     justify-content: center;
     gap: 10px;
 }
 
 /* 디데이 날짜 */
-.ddayMinus{
+#ddayMinus{
     width: 100px;
     height: 25px;
     position: sticky;
@@ -78,7 +78,7 @@ h1{
 
 
 /* 오디오 컨트롤 바 */
-.myAudio {
+#myAudio {
     position: sticky;
 }
 header {
@@ -86,7 +86,7 @@ header {
     align-items: center;
 }
 
-.myAudio {
+#myAudio {
     display: inline-block;
     vertical-align: middle;
     color: white;
@@ -97,10 +97,10 @@ header {
 /* 이미지 */
 
 /* 이미지 트렌지션 */
-.imageContainer{
+#imageContainer{
     z-index: 0;
 }
-.imageMain {
+#imageMain {
     position: relative;
     width: 100%;
     height: 100vh;
@@ -111,17 +111,17 @@ header {
     transition: background-image 0.5s ease-in-out;
     align-items: center;
 }
-.imageMain:hover {
+#imageMain:hover {
     background-image: url(img/KakaoTalk_20260403_120914632.png);
 }
 
 /* 이미지 그라데이션 */
-.imageMain {
+#imageMain {
     mask-image: linear-gradient(to bottom, rgba(0, 0, 0, 1)60%, rgba(0, 0, 0, 0)100%);
 }
 
 /* 지도이미지 */
-.weddingMapImage{
+#weddingMapImage{
     position: relative;
     width: 100%;
     height: 100vh;
@@ -133,10 +133,10 @@ header {
     margin: 0;
 }
 
-.navigate{
+#navigate{
     gap: 10px;
 }
-.mapButton{
+#mapButton{
     background-position: center;
     align-items: center;
     margin-left: auto;
