@@ -16,11 +16,11 @@ function onLoginSubmit(event) {
     paintGreetings(username);
     
     /* 로그남기기 */
-    console.log(`console log : user login`)
-    console.log(`login time : ${date}`);
-    console.log(`username : "${username}"`);
-    console.log(`localstorage.username : "${localStorage.username}"`);
-    console.log(`coment : "Hello ${username}"`);
+    console.log(`greeting.console log : user login`)
+    console.log(`greeting.login time : ${date}`);
+    console.log(`greeting.username : "${username}"`);
+    console.log(`greeting.log.localstorage.username : "${localStorage.username}"`);
+    console.log(`greeting.log.coment : "Hello ${username}"`);
 }
 
 
