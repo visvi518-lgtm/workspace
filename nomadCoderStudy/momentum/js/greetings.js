@@ -23,9 +23,8 @@ function onLoginSubmit(event) {
     console.log(`greeting.log.coment : "Hello ${username}"`);
 }
 
-
 function paintGreetings(username){
-    greeting.innerText = `Hello ${username}!!`;
+    greeting.innerText = ` ${username}!!`;
     greeting.classList.remove(HIDDEN_CLASSNAME);
     usernameDeleteButton.classList.remove(HIDDEN_CLASSNAME);
 }
