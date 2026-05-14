@@ -3,13 +3,16 @@ const images = [
     "background img2.jpg",
     "background img3.jpg"
 ];
+
 const imageRandomNumber = Math.floor(Math.random()*images.length);
 const chosenImg = images[imageRandomNumber];
-const bdImage = document.createElement("img");
+/* const bdImage = document.createElement("img");
 
 bdImage.src = `img/${chosenImg}`;
 
-document.body.appendChild(bdImage);
+document.body.appendChild(bdImage); */
+
+document.body.style.backgroundImage = `URL("img/${chosenImg}")`;
 
 console.log(bdImage);
 
