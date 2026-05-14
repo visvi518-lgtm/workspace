@@ -1,6 +1,6 @@
 #clock {
-    font-family: dotum;
-    font-style: italic;
-    font-weight: 200;
+    font-size: 50px;
+    font-weight: 300px;
     color: rgb(255, 255, 255);
+    margin-bottom: 0;
 }

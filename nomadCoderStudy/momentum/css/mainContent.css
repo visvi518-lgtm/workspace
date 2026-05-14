@@ -1,0 +1,13 @@
+#mainContent{
+    color: white;
+
+    margin: auto;
+}
+
+#greeting,
+#timeGreeting{
+    align-items: center;
+    align-content: center;
+    margin: 0;
+
+}
