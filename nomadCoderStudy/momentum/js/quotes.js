@@ -45,6 +45,7 @@ function randomNumberQuotesLog(){
     console.log(`랜덤상수 : `, randomNumber);
     console.log(`랜덤상수 `,randomNumber,`번째의 명언: `, quotes[randomNumber])
 }
+
 /* 
 function handleAuthorHidden(){
     console.log("mouse enter");
