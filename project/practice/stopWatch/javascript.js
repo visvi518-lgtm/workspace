@@ -1,9 +1,14 @@
 const stopWatch = document.querySelector("h1#watch");
-const startButton = document.getElementById("startBtn");
-const stopButton = document.getElementById("stopBtn");
+const startButton = document.getElementById("start-btn");
+const stopButton = document.getElementById("stop-btn");
+const pauseButton = document.getElementById("pause-btn");
+const clearButton = document.getElementById("clear-btn");
+
+const HIDDEN_CLASSNAME = "hidden";
 
 let nowTime = 0;
 let intervalId = null;
+let watchTime = 0;
 
 function formatTime(milliseconds){
     const totalSeconds = Math.floor(milliseconds /1000);
@@ -16,11 +21,17 @@ function formatTime(milliseconds){
     return `${hours}:${minutes}:${seconds}.${milliSeconds}`;
 }
 
+let isAlerted = false;
+
 function startButtonClick(){
+
+    isAlerted = false;
 
     if(intervalId !== null){
         return;
     }
+
+    pauseButton.classList.remove(HIDDEN_CLASSNAME);
 
     console.log("start click");
     nowTime = new Date();
@@ -29,11 +40,18 @@ function startButtonClick(){
 
     intervalId = setInterval(function() {
         const newTime = new Date();
-        const watchTime = newTime - nowTime;
+        watchTime = newTime - nowTime;
 
         console.log(watchTime);
         stopWatch.innerText = formatTime(watchTime);
+
+        if (watchTime >= 5000 && isAlerted ===false){
+            alert("over 5sec")
+            isAlerted = true;
+        }
     },50);
+
+
 
 }
 
@@ -42,10 +60,32 @@ function stopButtonClick(){
 
     clearInterval(intervalId);
     intervalId = null;
+    pauseButton.classList.add(HIDDEN_CLASSNAME)
 
     stopWatch.innerText = "00:00:00";
+
 }
 
-startButton.addEventListener("click", startButtonClick);
+const pauseList = document.getElementById("pause-list");
 
+function pauseButtonClick(){
+    clearButton.classList.remove(HIDDEN_CLASSNAME);
+    console.log("pause click");
+    const li = document.createElement("li");
+    li.innerText = formatTime(watchTime);
+
+    pauseList.appendChild(li);
+}
+
+function clearButtonClick(){
+    console.log("clear click");
+    pauseList.innerHTML = "";
+    clearButton.classList.add(HIDDEN_CLASSNAME);
+}
+
+
+
+startButton.addEventListener("click", startButtonClick);
 stopButton.addEventListener("click", stopButtonClick);
+pauseButton.addEventListener("click", pauseButtonClick);
+clearButton.addEventListener("click", clearButtonClick);
