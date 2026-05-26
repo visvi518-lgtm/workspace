@@ -1,3 +1,16 @@
-#quote{
+#quote {
+    width: min(860px, 100%);
     color: white;
-};
+    font-size: 15px;
+    line-height: 1.6;
+    text-shadow: 0 8px 24px rgba(0, 0, 0, 0.5);
+}
+
+#quote span:first-child {
+    color: rgba(255, 255, 255, 0.9);
+    font-weight: 600;
+}
+
+#quote span:last-child {
+    color: rgba(255, 255, 255, 0.68);
+}
