@@ -57,7 +57,7 @@ function handleAuthorHiddenRemove(){
     author.classList.add(HIDDEN_CLASSNAME);
 }
 
-/* quote.addEventListener("mouseenter", handleAuthorHidden);
-quote.addEventListener("mouseleave", handleAuthorHiddenRemove); */
+quote.addEventListener("mouseenter", handleAuthorHidden);
+quote.addEventListener("mouseleave", handleAuthorHiddenRemove);
 
 randomNumberQuotesLog();
