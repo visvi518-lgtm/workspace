@@ -1,0 +1,55 @@
+🔜 앞으로 남은 스텝 (순서대로, 5단계)
+1️⃣ psycopg2-binary 설치 & 반영 (거의 완료 단계)
+pip install psycopg2-binary
+pip freeze > requirements.txt
+git add requirements.txt
+git commit -m "Add psycopg2 for Postgres"
+git push
+
+2️⃣ Render 재배포
+
+Render → qrshop-web
+
+Manual Deploy → Deploy latest commit
+
+로그에 Deploy live 뜨는지 확인
+
+3️⃣ 사이트 접속 확인
+
+https://qrshop-web.onrender.com/
+
+노란 DisallowedHost ❌ 없어야 함
+
+관리자 / 주문자 화면 나와야 함
+
+4️⃣ Render에서 관리자 계정 생성
+
+Render → qrshop-web → Shell
+
+python manage.py createsuperuser
+
+5️⃣ 최종 기능 테스트
+
+주문 등록
+
+관리자 로그인
+
+엑셀 다운로드
+👉 이거 되면 프로젝트 100% 완성
+
+🧭 한 줄 결론
+
+지금은 “배포 마무리 단계”이고,
+Postgres 드라이버만 제대로 올라가면 바로 끝나는 상태야.
+
+다음으로 내가 해줄 수 있는 것:
+
+🔹 지금 단계 기준 체크리스트
+
+🔹 Render 로그 해석 계속 도와주기
+
+🔹 과제/포트폴리오용 설명 문구 정리
+
+🔹 QR 코드 생성까지 마무리
+
+👉 다음으로 뭐 할지 하나만 말해줘.
