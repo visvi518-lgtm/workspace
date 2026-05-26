@@ -14,9 +14,6 @@ document.body.appendChild(bdImage); */
 
 document.body.style.backgroundImage = `URL("img/${chosenImg}")`;
 
-console.log(bdImage);
-
-
 
 function randomImageLog(){
     console.log(imageRandomNumber+1, `번째 사진`);
