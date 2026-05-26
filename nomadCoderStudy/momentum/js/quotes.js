@@ -46,7 +46,7 @@ function randomNumberQuotesLog(){
     console.log(`랜덤상수 `,randomNumber,`번째의 명언: `, quotes[randomNumber])
 }
 
-/* 
+
 function handleAuthorHidden(){
     console.log("mouse enter");
     author.classList.remove(HIDDEN_CLASSNAME);
@@ -57,8 +57,7 @@ function handleAuthorHiddenRemove(){
     author.classList.add(HIDDEN_CLASSNAME);
 }
 
-quote.addEventListener("mouseenter", handleAuthorHidden);
-quote.addEventListener("mouseleave", handleAuthorHiddenRemove);
- */
+/* quote.addEventListener("mouseenter", handleAuthorHidden);
+quote.addEventListener("mouseleave", handleAuthorHiddenRemove); */
 
 randomNumberQuotesLog();
