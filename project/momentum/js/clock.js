@@ -18,8 +18,8 @@ function getClock(){
         /* console.log("morning"); */
         timeGreeting.innerText = "Good Morning!";
     }else if(hourNumber > 9 && hourNumber<=11){
-        /* console.log("afternoon"); */
-        timeGreeting.innerText = "Good afternoon!";
+        /* console.log("morning"); */
+        timeGreeting.innerText = "Good Morning!";
     }else if(hourNumber >11 && hourNumber<=20){
         /* console.log("evening"); */
         timeGreeting.innerText = "Good evening!";
