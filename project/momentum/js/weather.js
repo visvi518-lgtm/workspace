@@ -1,6 +1,12 @@
-const API_KEY = '954015734f3550ccfb1e522f7be5a85b';
+const API_KEY = window.OPENWEATHER_API_KEY;
 
 function onGeoOk(position){
+    if (!API_KEY) {
+        const weather = document.querySelector("#weather span:first-child");
+        weather.innerText = "Weather API key required";
+        return;
+    }
+
     const lat = position.coords.latitude;
     const lon = position.coords.longitude;
     console.log(`weather.log.Geo.location.You live in : `, lat, ` , `, lon);
