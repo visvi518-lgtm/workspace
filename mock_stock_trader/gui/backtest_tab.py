@@ -62,8 +62,8 @@ class BacktestTab(ctk.CTkFrame):
         # ── 차트 ──
         chart_frame = ctk.CTkFrame(self, corner_radius=10, fg_color=("#252535", "#1a1a2a"))
         chart_frame.pack(fill="x", padx=15, pady=5)
-        ctk.CTkLabel(chart_frame, text="포트폴리오 가치 변화",
-                     font=("Malgun Gothic", 12, "bold")).pack(anchor="w", padx=12, pady=(8, 0))
+        ctk.CTkLabel(chart_frame, text="포트폴리오 수익률 추이  (2년 이내: 시간봉 / 초과: 일봉)",
+                     font=("Malgun Gothic", 11, "bold")).pack(anchor="w", padx=12, pady=(8, 0))
         self.fig = Figure(figsize=(10, 2.8), dpi=96, facecolor="#1a1a2a")
         self.ax = self.fig.add_subplot(111)
         self.ax.set_facecolor("#1a1a2a")
@@ -203,12 +203,12 @@ class BacktestTab(ctk.CTkFrame):
             background="#252535", foreground="#aaa", font=("Malgun Gothic", 10, "bold"))
         style.map("BT.Treeview", background=[("selected", "#3a3a5c")])
 
-        cols = ("date", "market", "type", "name", "price", "qty", "amount", "fee", "profit", "rate", "reason")
+        cols = ("date", "time", "market", "type", "name", "price", "qty", "amount", "fee", "profit", "rate", "reason")
         hdrs = [
-            ("date", "날짜", 90), ("market", "시장", 50), ("type", "구분", 55),
+            ("date", "날짜", 90), ("time", "시간", 60), ("market", "시장", 50), ("type", "구분", 55),
             ("name", "종목", 100), ("price", "단가", 90), ("qty", "수량", 55),
             ("amount", "거래금액", 100), ("fee", "수수료", 70),
-            ("profit", "손익", 90), ("rate", "수익률", 70), ("reason", "매매 이유", 320),
+            ("profit", "손익", 90), ("rate", "수익률", 70), ("reason", "매매 이유", 300),
         ]
         self.trade_tree = ttk.Treeview(parent, style="BT.Treeview", show="headings", columns=cols)
         for col, hdr, w in hdrs:
@@ -355,38 +355,55 @@ class BacktestTab(ctk.CTkFrame):
             text_color=color
         )
 
-        # 차트
+        # 차트 (1h 데이터 있으면 시간봉, 없으면 일봉)
         self.ax.clear()
         self.ax.set_facecolor("#1a1a2a")
-        if r.portfolio_history:
-            dates = [datetime.strptime(d["date"], "%Y-%m-%d") for d in r.portfolio_history]
-            vals = [d["value"] for d in r.portfolio_history]
+        use_hourly = getattr(r, "used_hourly", False) and bool(getattr(r, "hourly_history", []))
+        if use_hourly:
+            history = r.hourly_history
+            dates = [datetime.strptime(d["datetime"], "%Y-%m-%d %H:%M") for d in history]
+            fmt = "%m/%d %H:%M"
+            chart_title = "포트폴리오 수익률 추이 (시간봉)"
+        elif r.portfolio_history:
+            history = r.portfolio_history
+            dates = [datetime.strptime(d["date"], "%Y-%m-%d") for d in history]
+            fmt = "%y/%m/%d"
+            chart_title = "포트폴리오 수익률 추이 (일봉)"
+        else:
+            history = []
+            dates = []
+            chart_title = "포트폴리오 수익률 추이"
+
+        if dates:
+            vals  = [d["value"] for d in history]
             rates = [(v - r.initial_capital) / r.initial_capital * 100 for v in vals]
             c = _color(rates[-1] if rates else 0)
-            self.ax.plot(dates, rates, color=c, linewidth=1.5)
+            self.ax.plot(dates, rates, color=c, linewidth=1.2)
             self.ax.axhline(0, color="gray", linewidth=0.6, linestyle="--")
-            self.ax.fill_between(dates, 0, rates, alpha=0.12, color=c)
-            self.ax.xaxis.set_major_formatter(mdates.DateFormatter("%y/%m"))
+            self.ax.fill_between(dates, 0, rates, alpha=0.10, color=c)
+            self.ax.xaxis.set_major_formatter(mdates.DateFormatter(fmt))
             self.fig.autofmt_xdate(rotation=30, ha="right")
         self.ax.tick_params(colors="gray", labelsize=8)
         self.ax.spines[:].set_color("#444")
         self.ax.set_ylabel("수익률(%)", color="gray", fontsize=8, fontname="Malgun Gothic")
+        self.ax.set_title(chart_title, color="#90caf9", fontsize=9, fontname="Malgun Gothic")
         self.fig.tight_layout(pad=1.0)
         self.canvas.draw()
 
-        # 거래 내역 테이블
+        # 거래 내역 테이블 (날짜 + 시간 컬럼)
         self.trade_tree.delete(*self.trade_tree.get_children())
         for t in r.trades:
             typ = "▲매수" if t.trade_type == "BUY" else "▼매도"
             pft = ""
-            rt = ""
+            rt  = ""
             if t.profit is not None:
-                sg = "+" if t.profit >= 0 else ""
+                sg  = "+" if t.profit >= 0 else ""
                 pft = f"{sg}{t.profit:,.0f}"
-                rt = f"{sg}{t.profit_rate:.2f}%"
+                rt  = f"{sg}{t.profit_rate:.2f}%"
             tag = "buy" if t.trade_type == "BUY" else ("pos" if (t.profit or 0) >= 0 else "neg")
+            trade_time = getattr(t, "time", "")
             self.trade_tree.insert("", "end", tags=(tag,), values=(
-                t.date, t.market, typ, t.name,
+                t.date, trade_time, t.market, typ, t.name,
                 f"{t.price:,.0f}", t.quantity, f"{t.amount:,.0f}",
                 f"{t.fee:,.0f}", pft, rt, t.reason,
             ))

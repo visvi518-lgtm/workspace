@@ -4,6 +4,7 @@ from gui.portfolio_tab import PortfolioTab
 from gui.log_tab import LogTab
 from gui.settings_tab import SettingsTab
 from gui.backtest_tab import BacktestTab
+from gui.optimizer_tab import OptimizerTab
 
 UPDATE_INTERVAL_MS = 10_000  # 10초마다 UI 갱신
 
@@ -68,7 +69,7 @@ class MainWindow(ctk.CTk):
         )
         self.tabview.pack(fill="both", expand=True, padx=10, pady=(5, 10))
 
-        for name in ("대시보드", "포트폴리오", "거래 로그", "백테스트", "설정"):
+        for name in ("대시보드", "포트폴리오", "거래 로그", "백테스트", "전략 최적화", "설정"):
             self.tabview.add(name)
 
         self.tab_dashboard = DashboardTab(
@@ -90,6 +91,11 @@ class MainWindow(ctk.CTk):
             self.tabview.tab("백테스트"), self.db
         )
         self.tab_backtest.pack(fill="both", expand=True)
+
+        self.tab_optimizer = OptimizerTab(
+            self.tabview.tab("전략 최적화"), self.db
+        )
+        self.tab_optimizer.pack(fill="both", expand=True)
 
         self.tab_settings = SettingsTab(
             self.tabview.tab("설정"), self.db, self.portfolio, self.auto_trader
