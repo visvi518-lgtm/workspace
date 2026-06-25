@@ -78,9 +78,11 @@ class BacktestTab(ctk.CTkFrame):
         self.sub_tab.pack(fill="both", expand=True, padx=15, pady=(0, 10))
         self.sub_tab.add("거래 내역")
         self.sub_tab.add("종목별 성과")
+        self.sub_tab.add("이벤트 분석")
 
         self._build_trade_table(self.sub_tab.tab("거래 내역"))
         self._build_perf_table(self.sub_tab.tab("종목별 성과"))
+        self._build_event_tab(self.sub_tab.tab("이벤트 분석"))
 
     def _build_input(self, parent):
         box = ctk.CTkFrame(parent, corner_radius=12, fg_color=("#252535", "#1a1a2a"))
@@ -323,6 +325,7 @@ class BacktestTab(ctk.CTkFrame):
             return
         self._result = result
         self._show_result(result)
+        self._run_event_analysis(result)
 
     def _set_idle(self):
         self._running = False
@@ -403,3 +406,186 @@ class BacktestTab(ctk.CTkFrame):
             ))
         self.perf_tree.tag_configure("pos", foreground="#ef5350")
         self.perf_tree.tag_configure("neg", foreground="#42a5f5")
+
+    # ── 이벤트 분석 탭 ──
+
+    def _build_event_tab(self, parent):
+        self.event_scroll = ctk.CTkScrollableFrame(
+            parent, fg_color="transparent",
+            scrollbar_button_color="#3a7bd5",
+            scrollbar_button_hover_color="#5a9bf5",
+        )
+        self.event_scroll.pack(fill="both", expand=True)
+        ctk.CTkLabel(
+            self.event_scroll,
+            text="백테스트를 실행하면 최대 낙폭 / 최고 수익 이벤트 분석과 관련 뉴스가 자동으로 표시됩니다.",
+            font=("Malgun Gothic", 11), text_color="#607d8b",
+        ).pack(pady=30)
+
+    def _run_event_analysis(self, result):
+        for w in self.event_scroll.winfo_children():
+            w.destroy()
+
+        ctk.CTkLabel(
+            self.event_scroll,
+            text="이벤트 분석 + 뉴스 수집 중... (최대 30초 소요)",
+            font=("Malgun Gothic", 11), text_color="#90caf9",
+        ).pack(pady=(20, 6))
+        prog = ctk.CTkProgressBar(self.event_scroll, width=320, mode="indeterminate")
+        prog.pack()
+        prog.start()
+
+        def worker():
+            from trader.news_analyzer import NewsAnalyzer
+            try:
+                analysis = NewsAnalyzer().analyze(result)
+            except Exception:
+                analysis = None
+            self.after(0, lambda: self._show_event_analysis(analysis))
+
+        threading.Thread(target=worker, daemon=True).start()
+
+    def _show_event_analysis(self, analysis):
+        for w in self.event_scroll.winfo_children():
+            w.destroy()
+
+        if analysis is None:
+            ctk.CTkLabel(
+                self.event_scroll,
+                text="이벤트 분석 중 오류가 발생했습니다.",
+                font=("Malgun Gothic", 11), text_color="#ef5350",
+            ).pack(pady=20)
+            return
+
+        # 최대 낙폭 이벤트
+        if analysis.mdd.date:
+            self._evt_section(
+                title=f"최대 낙폭 이벤트    날짜: {analysis.mdd.date[:10]}   낙폭: {analysis.mdd.rate:+.2f}%",
+                hdr_color="#1a237e",
+                section=analysis.mdd,
+            )
+
+        # 최고 수익 이벤트
+        if analysis.peak.date:
+            self._evt_section(
+                title=f"최고 수익 이벤트    날짜: {analysis.peak.date[:10]}   최고: {analysis.peak.rate:+.2f}%",
+                hdr_color="#1b5e20",
+                section=analysis.peak,
+            )
+
+        # 손실 종목
+        if analysis.losers:
+            self._evt_group_header("손실 종목 분석 (하위 3종목)", "#4a1515")
+            for sa in analysis.losers:
+                self._evt_stock_card(sa)
+
+        # 수익 종목
+        if analysis.winners:
+            self._evt_group_header("수익 종목 분석 (상위 3종목)", "#0d3321")
+            for sa in analysis.winners:
+                self._evt_stock_card(sa)
+
+        ctk.CTkLabel(
+            self.event_scroll,
+            text=(
+                "※ 뉴스는 네이버 뉴스 검색 및 Yahoo Finance에서 수집됩니다.  "
+                "오래된 날짜(~3년 이상)는 검색 결과가 제한될 수 있습니다."
+            ),
+            font=("Malgun Gothic", 9), text_color="#455a64",
+        ).pack(anchor="w", padx=12, pady=(6, 12))
+
+    def _evt_section(self, title: str, hdr_color: str, section):
+        card = ctk.CTkFrame(self.event_scroll, corner_radius=10, fg_color=("#1c1c2c", "#131320"))
+        card.pack(fill="x", padx=10, pady=6)
+
+        hdr = ctk.CTkFrame(card, corner_radius=0, fg_color=hdr_color, height=30)
+        hdr.pack(fill="x")
+        hdr.pack_propagate(False)
+        ctk.CTkLabel(
+            hdr, text=f"  {title}",
+            font=("Malgun Gothic", 11, "bold"), text_color="white",
+        ).pack(side="left", padx=6, pady=4)
+
+        if section.stocks:
+            stock_text = "  |  ".join(
+                f"{s.name} ({'+' if s.profit >= 0 else ''}{s.profit:,.0f}원)"
+                for s in section.stocks[:4]
+            )
+            rw = ctk.CTkFrame(card, fg_color="transparent")
+            rw.pack(fill="x", padx=10, pady=(8, 2))
+            ctk.CTkLabel(rw, text="관련 종목", font=("Malgun Gothic", 10), text_color="#90caf9", width=70, anchor="w").pack(side="left")
+            ctk.CTkLabel(rw, text=stock_text, font=("Malgun Gothic", 10), text_color="#ccc").pack(side="left", padx=6)
+
+        ctk.CTkLabel(card, text="기술적 분석", font=("Malgun Gothic", 10, "bold"), text_color="#90caf9", anchor="w").pack(fill="x", padx=10, pady=(6, 2))
+        tb = ctk.CTkTextbox(card, height=80, font=("Malgun Gothic", 10), fg_color="#0d1117", text_color="#cdd6e0")
+        tb.pack(fill="x", padx=10, pady=(0, 4))
+        tb.insert("1.0", section.tech_summary or "데이터 없음")
+        tb.configure(state="disabled")
+
+        ctk.CTkLabel(card, text="관련 뉴스", font=("Malgun Gothic", 10, "bold"), text_color="#90caf9", anchor="w").pack(fill="x", padx=10, pady=(4, 2))
+        if section.news:
+            lines = []
+            for item in section.news:
+                prefix = f"[{item.date}] " if item.date else ""
+                src = f"  ({item.source})" if item.source else ""
+                lines.append(f"▸ {prefix}{item.title}{src}")
+                if item.desc:
+                    lines.append(f"   └ {item.desc}")
+            nb = ctk.CTkTextbox(card, height=max(70, len(section.news) * 22 + 10),
+                                font=("Malgun Gothic", 10), fg_color="#0d1117", text_color="#e8eaf6")
+            nb.pack(fill="x", padx=10, pady=(0, 12))
+            nb.insert("1.0", "\n".join(lines))
+            nb.configure(state="disabled")
+        else:
+            ctk.CTkLabel(
+                card, anchor="w",
+                text="  뉴스 검색 결과 없음 (해당 날짜 아카이브 제한 또는 네트워크 오류)",
+                font=("Malgun Gothic", 10), text_color="#607d8b",
+            ).pack(fill="x", padx=10, pady=(0, 12))
+
+    def _evt_group_header(self, text: str, color: str):
+        h = ctk.CTkFrame(self.event_scroll, corner_radius=0, fg_color=color, height=26)
+        h.pack(fill="x", padx=10, pady=(10, 2))
+        h.pack_propagate(False)
+        ctk.CTkLabel(h, text=f"  {text}", font=("Malgun Gothic", 11, "bold"), text_color="white").pack(side="left", pady=3, padx=6)
+
+    def _evt_stock_card(self, sa):
+        sign = "+" if sa.profit >= 0 else ""
+        pft_col = "#ef5350" if sa.profit >= 0 else "#42a5f5"
+        arrow = "▲" if sa.profit >= 0 else "▼"
+
+        card = ctk.CTkFrame(self.event_scroll, corner_radius=8, fg_color=("#1c1c2c", "#131320"))
+        card.pack(fill="x", padx=10, pady=3)
+
+        top = ctk.CTkFrame(card, fg_color="transparent")
+        top.pack(fill="x", padx=10, pady=(8, 2))
+        ctk.CTkLabel(
+            top,
+            text=f"  {arrow}  {sa.name}  ({sa.market})",
+            font=("Malgun Gothic", 12, "bold"), text_color="white",
+        ).pack(side="left")
+        ctk.CTkLabel(
+            top,
+            text=f"손익: {sign}{sa.profit:,.0f}원 ({sign}{sa.profit_rate:.2f}%)",
+            font=("Malgun Gothic", 11, "bold"), text_color=pft_col,
+        ).pack(side="right")
+
+        sb = ctk.CTkTextbox(card, height=46, font=("Malgun Gothic", 10), fg_color="#0d1117", text_color="#cdd6e0")
+        sb.pack(fill="x", padx=10, pady=(2, 4))
+        sb.insert("1.0", sa.summary)
+        sb.configure(state="disabled")
+
+        if sa.news:
+            ctk.CTkLabel(card, text="  관련 뉴스:", font=("Malgun Gothic", 10), text_color="#90caf9", anchor="w").pack(fill="x", padx=10)
+            nb = ctk.CTkTextbox(card, height=max(48, len(sa.news) * 20),
+                                font=("Malgun Gothic", 10), fg_color="#0d1117", text_color="#e8eaf6")
+            nb.pack(fill="x", padx=10, pady=(0, 10))
+            for item in sa.news:
+                prefix = f"[{item.date}] " if item.date else ""
+                nb.insert("end", f"  ▸ {prefix}{item.title}\n")
+            nb.configure(state="disabled")
+        else:
+            ctk.CTkLabel(
+                card, anchor="w", text="  뉴스 검색 결과 없음",
+                font=("Malgun Gothic", 10), text_color="#607d8b",
+            ).pack(fill="x", padx=10, pady=(0, 10))

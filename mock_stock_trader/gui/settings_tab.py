@@ -13,7 +13,7 @@ class SettingsTab(ctk.CTkFrame):
         self._load()
 
     def _section(self, title: str) -> ctk.CTkFrame:
-        box = ctk.CTkFrame(self, corner_radius=10, fg_color=("#2b2b2b", "#1e1e2e"))
+        box = ctk.CTkFrame(self._scroll, corner_radius=10, fg_color=("#2b2b2b", "#1e1e2e"))
         box.pack(fill="x", padx=15, pady=6)
         ctk.CTkLabel(box, text=title, font=("Malgun Gothic", 13, "bold"), text_color="#aaa").pack(anchor="w", padx=12, pady=(10, 4))
         return box
@@ -27,6 +27,13 @@ class SettingsTab(ctk.CTkFrame):
         return w
 
     def _build(self):
+        # 스크롤 가능한 컨테이너
+        self._scroll = ctk.CTkScrollableFrame(
+            self, fg_color="transparent",
+            scrollbar_button_color="#3a7bd5",
+            scrollbar_button_hover_color="#5a9bf5",
+        )
+        self._scroll.pack(fill="both", expand=True)
         # ── 자금 설정 ──
         sec1 = self._section("자금 설정")
 
@@ -106,9 +113,9 @@ class SettingsTab(ctk.CTkFrame):
         )
         self.status_label.pack(side="left", padx=20)
 
-        # 저장 버튼
+        # 저장 버튼 (스크롤 안에 포함)
         ctk.CTkButton(
-            self, text="설정 저장", command=self._save,
+            self._scroll, text="설정 저장", command=self._save,
             font=("Malgun Gothic", 12, "bold"), width=160
         ).pack(pady=10)
 
