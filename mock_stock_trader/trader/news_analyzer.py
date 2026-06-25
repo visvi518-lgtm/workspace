@@ -162,10 +162,19 @@ class NewsAnalyzer:
         mdd_tech  = self._tech_summary(mdd_date,  result, "낙폭")
         peak_tech = self._tech_summary(peak_date, result, "수익")
 
-        # 종목별 분석
+        # 종목별 분석 — 손익 부호와 무관하게 상위/하위 3종목 항상 표시
         perfs = sorted(result.stock_performances, key=lambda x: x["profit"])
-        winners = self._build_stock_analyses([p for p in reversed(perfs) if p["profit"] > 0][:3], result.trades)
-        losers  = self._build_stock_analyses([p for p in perfs            if p["profit"] < 0][:3], result.trades)
+        n = len(perfs)
+        if n == 0:
+            winners, losers = [], []
+        elif n == 1:
+            # 종목이 1개면 winners에만 표시
+            winners = self._build_stock_analyses(perfs, result.trades)
+            losers  = []
+        else:
+            split = min(3, max(1, n // 2))
+            losers  = self._build_stock_analyses(perfs[:split], result.trades)
+            winners = self._build_stock_analyses(list(reversed(perfs))[:split], result.trades)
 
         return EventAnalysis(
             mdd=SectionAnalysis(

@@ -416,22 +416,31 @@ class BacktestTab(ctk.CTkFrame):
             scrollbar_button_hover_color="#5a9bf5",
         )
         self.event_scroll.pack(fill="both", expand=True)
+        # 내용을 담는 wrapper frame — destroy/recreate로 초기화
+        self._evt_wrapper = ctk.CTkFrame(self.event_scroll, fg_color="transparent")
+        self._evt_wrapper.pack(fill="x", expand=True)
         ctk.CTkLabel(
-            self.event_scroll,
+            self._evt_wrapper,
             text="백테스트를 실행하면 최대 낙폭 / 최고 수익 이벤트 분석과 관련 뉴스가 자동으로 표시됩니다.",
             font=("Malgun Gothic", 11), text_color="#607d8b",
         ).pack(pady=30)
 
-    def _run_event_analysis(self, result):
-        for w in self.event_scroll.winfo_children():
-            w.destroy()
+    def _reset_evt(self):
+        """이벤트 탭 내용 초기화 후 새 wrapper 반환"""
+        if hasattr(self, "_evt_wrapper") and self._evt_wrapper.winfo_exists():
+            self._evt_wrapper.destroy()
+        self._evt_wrapper = ctk.CTkFrame(self.event_scroll, fg_color="transparent")
+        self._evt_wrapper.pack(fill="x", expand=True)
+        return self._evt_wrapper
 
+    def _run_event_analysis(self, result):
+        w = self._reset_evt()
         ctk.CTkLabel(
-            self.event_scroll,
+            w,
             text="이벤트 분석 + 뉴스 수집 중... (최대 30초 소요)",
             font=("Malgun Gothic", 11), text_color="#90caf9",
         ).pack(pady=(20, 6))
-        prog = ctk.CTkProgressBar(self.event_scroll, width=320, mode="indeterminate")
+        prog = ctk.CTkProgressBar(w, width=320, mode="indeterminate")
         prog.pack()
         prog.start()
 
@@ -446,12 +455,11 @@ class BacktestTab(ctk.CTkFrame):
         threading.Thread(target=worker, daemon=True).start()
 
     def _show_event_analysis(self, analysis):
-        for w in self.event_scroll.winfo_children():
-            w.destroy()
+        self._reset_evt()
 
         if analysis is None:
             ctk.CTkLabel(
-                self.event_scroll,
+                self._evt_wrapper,
                 text="이벤트 분석 중 오류가 발생했습니다.",
                 font=("Malgun Gothic", 11), text_color="#ef5350",
             ).pack(pady=20)
@@ -473,20 +481,31 @@ class BacktestTab(ctk.CTkFrame):
                 section=analysis.peak,
             )
 
-        # 손실 종목
+        # 하위 성과 종목 (손절/손실 多)
         if analysis.losers:
-            self._evt_group_header("손실 종목 분석 (하위 3종목)", "#4a1515")
+            self._evt_group_header(
+                f"하위 성과 종목 분석 ({len(analysis.losers)}종목)", "#4a1515"
+            )
             for sa in analysis.losers:
                 self._evt_stock_card(sa)
 
-        # 수익 종목
+        # 상위 성과 종목 (익절/수익 多)
         if analysis.winners:
-            self._evt_group_header("수익 종목 분석 (상위 3종목)", "#0d3321")
+            self._evt_group_header(
+                f"상위 성과 종목 분석 ({len(analysis.winners)}종목)", "#0d3321"
+            )
             for sa in analysis.winners:
                 self._evt_stock_card(sa)
 
+        if not analysis.losers and not analysis.winners:
+            ctk.CTkLabel(
+                self._evt_wrapper,
+                text="종목별 성과 데이터가 부족합니다. (매도 거래 없음)",
+                font=("Malgun Gothic", 11), text_color="#607d8b",
+            ).pack(pady=10)
+
         ctk.CTkLabel(
-            self.event_scroll,
+            self._evt_wrapper,
             text=(
                 "※ 뉴스는 네이버 뉴스 검색 및 Yahoo Finance에서 수집됩니다.  "
                 "오래된 날짜(~3년 이상)는 검색 결과가 제한될 수 있습니다."
@@ -495,7 +514,7 @@ class BacktestTab(ctk.CTkFrame):
         ).pack(anchor="w", padx=12, pady=(6, 12))
 
     def _evt_section(self, title: str, hdr_color: str, section):
-        card = ctk.CTkFrame(self.event_scroll, corner_radius=10, fg_color=("#1c1c2c", "#131320"))
+        card = ctk.CTkFrame(self._evt_wrapper, corner_radius=10, fg_color=("#1c1c2c", "#131320"))
         card.pack(fill="x", padx=10, pady=6)
 
         hdr = ctk.CTkFrame(card, corner_radius=0, fg_color=hdr_color, height=30)
@@ -544,7 +563,7 @@ class BacktestTab(ctk.CTkFrame):
             ).pack(fill="x", padx=10, pady=(0, 12))
 
     def _evt_group_header(self, text: str, color: str):
-        h = ctk.CTkFrame(self.event_scroll, corner_radius=0, fg_color=color, height=26)
+        h = ctk.CTkFrame(self._evt_wrapper, corner_radius=0, fg_color=color, height=26)
         h.pack(fill="x", padx=10, pady=(10, 2))
         h.pack_propagate(False)
         ctk.CTkLabel(h, text=f"  {text}", font=("Malgun Gothic", 11, "bold"), text_color="white").pack(side="left", pady=3, padx=6)
@@ -554,7 +573,7 @@ class BacktestTab(ctk.CTkFrame):
         pft_col = "#ef5350" if sa.profit >= 0 else "#42a5f5"
         arrow = "▲" if sa.profit >= 0 else "▼"
 
-        card = ctk.CTkFrame(self.event_scroll, corner_radius=8, fg_color=("#1c1c2c", "#131320"))
+        card = ctk.CTkFrame(self._evt_wrapper, corner_radius=8, fg_color=("#1c1c2c", "#131320"))
         card.pack(fill="x", padx=10, pady=3)
 
         top = ctk.CTkFrame(card, fg_color="transparent")
