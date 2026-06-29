@@ -49,6 +49,7 @@ export default function CalendarTab() {
           value={date}
           tileContent={tileContent}
           locale="ko-KR"
+          calendarType="gregory"
         />
       </div>
 

@@ -1,16 +1,34 @@
 from datetime import datetime, timezone
+from urllib.parse import urlencode
+import secrets
 
+import httpx
 from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi.responses import RedirectResponse
 from pydantic import BaseModel, EmailStr
 from sqlalchemy.orm import Session
 
 from app.api.deps import get_current_user
+from app.core.config import settings
 from app.core.database import get_db
 from app.core.security import (
     create_access_token, get_password_hash,
     validate_password, verify_password
 )
 from app.models.user import User, UserProfile
+
+GOOGLE_REDIRECT_URI = f"{settings.BACKEND_URL}/api/v1/auth/google/callback"
+NAVER_REDIRECT_URI = f"{settings.BACKEND_URL}/api/v1/auth/naver/callback"
+
+
+def _unique_nickname(db: Session, base: str) -> str:
+    base = (base or "user").strip()[:20]
+    nickname = base
+    i = 1
+    while db.query(User).filter(User.nickname == nickname).first():
+        nickname = f"{base[:18]}{i}"
+        i += 1
+    return nickname
 
 router = APIRouter(prefix="/auth", tags=["auth"])
 
@@ -140,6 +158,52 @@ def update_profile(
     return serialize_user(current_user)
 
 
+class ForgotPasswordRequest(BaseModel):
+    email: EmailStr
+
+
+class ResetPasswordRequest(BaseModel):
+    token: str
+    new_password: str
+
+
+@router.post("/forgot-password")
+def forgot_password(data: ForgotPasswordRequest, db: Session = Depends(get_db)):
+    user = db.query(User).filter(User.email == data.email).first()
+    # 유저가 없어도 동일한 응답 (이메일 노출 방지)
+    if user:
+        from datetime import timedelta
+        from app.core.email import send_password_reset_email
+        reset_token = create_access_token(
+            {"sub": str(user.id), "type": "password_reset"},
+            expires_delta=timedelta(hours=1),
+        )
+        reset_url = f"{settings.FRONTEND_URL}/reset-password?token={reset_token}"
+        try:
+            send_password_reset_email(user.email, reset_url)
+        except Exception as e:
+            raise HTTPException(status_code=500, detail=f"이메일 전송에 실패했습니다: {str(e)}")
+    return {"message": "입력하신 이메일로 재설정 링크를 발송했습니다."}
+
+
+@router.post("/reset-password")
+def reset_password(data: ResetPasswordRequest, db: Session = Depends(get_db)):
+    from app.core.security import decode_token
+    payload = decode_token(data.token)
+    if not payload or payload.get("type") != "password_reset":
+        raise HTTPException(status_code=400, detail="유효하지 않거나 만료된 링크입니다.")
+
+    user = db.query(User).filter(User.id == int(payload["sub"])).first()
+    if not user:
+        raise HTTPException(status_code=404, detail="사용자를 찾을 수 없습니다.")
+    if not validate_password(data.new_password):
+        raise HTTPException(status_code=422, detail="비밀번호는 영문, 숫자, 특수문자를 포함한 8~20자여야 합니다.")
+
+    user.password_hash = get_password_hash(data.new_password)
+    db.commit()
+    return {"message": "비밀번호가 성공적으로 변경되었습니다."}
+
+
 @router.put("/password")
 def change_password(
     data: PasswordChangeRequest,
@@ -154,3 +218,145 @@ def change_password(
     current_user.password_hash = get_password_hash(data.new_password)
     db.commit()
     return {"message": "비밀번호가 변경되었습니다."}
+
+
+# ─── Google OAuth ───
+
+@router.get("/google")
+def google_login():
+    if not settings.GOOGLE_CLIENT_ID:
+        raise HTTPException(status_code=400, detail="Google OAuth가 설정되지 않았습니다. .env에 GOOGLE_CLIENT_ID를 입력해 주세요.")
+    params = {
+        "client_id": settings.GOOGLE_CLIENT_ID,
+        "redirect_uri": GOOGLE_REDIRECT_URI,
+        "response_type": "code",
+        "scope": "openid email profile",
+        "access_type": "online",
+    }
+    return RedirectResponse(f"https://accounts.google.com/o/oauth2/v2/auth?{urlencode(params)}")
+
+
+@router.get("/google/callback")
+async def google_callback(code: str = None, error: str = None, db: Session = Depends(get_db)):
+    if error or not code:
+        return RedirectResponse(f"{settings.FRONTEND_URL}/login?error=google_cancelled")
+
+    async with httpx.AsyncClient() as client:
+        token_res = await client.post(
+            "https://oauth2.googleapis.com/token",
+            data={
+                "code": code,
+                "client_id": settings.GOOGLE_CLIENT_ID,
+                "client_secret": settings.GOOGLE_CLIENT_SECRET,
+                "redirect_uri": GOOGLE_REDIRECT_URI,
+                "grant_type": "authorization_code",
+            },
+        )
+        token_data = token_res.json()
+        access_token = token_data.get("access_token")
+        if not access_token:
+            return RedirectResponse(f"{settings.FRONTEND_URL}/login?error=google_failed")
+
+        info_res = await client.get(
+            "https://www.googleapis.com/oauth2/v2/userinfo",
+            headers={"Authorization": f"Bearer {access_token}"},
+        )
+        info = info_res.json()
+
+    google_id = info.get("id")
+    email = info.get("email")
+    name = info.get("name", "")
+
+    if not google_id or not email:
+        return RedirectResponse(f"{settings.FRONTEND_URL}/login?error=google_info")
+
+    user = db.query(User).filter(User.google_id == google_id).first()
+    if not user:
+        user = db.query(User).filter(User.email == email).first()
+        if user:
+            user.google_id = google_id
+        else:
+            nickname = _unique_nickname(db, name or email.split("@")[0])
+            user = User(email=email, nickname=nickname, name=name, google_id=google_id)
+            user.profile = UserProfile()
+            db.add(user)
+
+    user.last_login = datetime.now(timezone.utc)
+    db.commit()
+    db.refresh(user)
+
+    token = create_access_token({"sub": str(user.id)})
+    return RedirectResponse(f"{settings.FRONTEND_URL}/auth/callback?token={token}")
+
+
+# ─── Naver OAuth ───
+
+@router.get("/naver")
+def naver_login():
+    if not settings.NAVER_CLIENT_ID:
+        raise HTTPException(status_code=400, detail="Naver OAuth가 설정되지 않았습니다.")
+    state = secrets.token_urlsafe(16)
+    params = {
+        "response_type": "code",
+        "client_id": settings.NAVER_CLIENT_ID,
+        "redirect_uri": NAVER_REDIRECT_URI,
+        "state": state,
+    }
+    return RedirectResponse(f"https://nid.naver.com/oauth2.0/authorize?{urlencode(params)}")
+
+
+@router.get("/naver/callback")
+async def naver_callback(code: str = None, state: str = None, error: str = None, db: Session = Depends(get_db)):
+    if error or not code:
+        return RedirectResponse(f"{settings.FRONTEND_URL}/login?error=naver_cancelled")
+
+    async with httpx.AsyncClient() as client:
+        token_res = await client.get(
+            "https://nid.naver.com/oauth2.0/token",
+            params={
+                "grant_type": "authorization_code",
+                "client_id": settings.NAVER_CLIENT_ID,
+                "client_secret": settings.NAVER_CLIENT_SECRET,
+                "code": code,
+                "state": state,
+            },
+        )
+        token_data = token_res.json()
+        access_token = token_data.get("access_token")
+        if not access_token:
+            return RedirectResponse(f"{settings.FRONTEND_URL}/login?error=naver_failed")
+
+        info_res = await client.get(
+            "https://openapi.naver.com/v1/nid/me",
+            headers={"Authorization": f"Bearer {access_token}"},
+        )
+        info = info_res.json()
+
+    resp = info.get("response", {})
+    naver_id = resp.get("id")
+    email = resp.get("email", "")
+    name = resp.get("name", "")
+    nickname_base = resp.get("nickname") or name or (email.split("@")[0] if email else "")
+
+    if not naver_id:
+        return RedirectResponse(f"{settings.FRONTEND_URL}/login?error=naver_info")
+
+    user = db.query(User).filter(User.naver_id == naver_id).first()
+    if not user:
+        if email:
+            user = db.query(User).filter(User.email == email).first()
+        if user:
+            user.naver_id = naver_id
+        else:
+            unique_nick = _unique_nickname(db, nickname_base or "user")
+            fallback_email = email or f"naver_{naver_id}@naver.com"
+            user = User(email=fallback_email, nickname=unique_nick, name=name, naver_id=naver_id)
+            user.profile = UserProfile()
+            db.add(user)
+
+    user.last_login = datetime.now(timezone.utc)
+    db.commit()
+    db.refresh(user)
+
+    token = create_access_token({"sub": str(user.id)})
+    return RedirectResponse(f"{settings.FRONTEND_URL}/auth/callback?token={token}")

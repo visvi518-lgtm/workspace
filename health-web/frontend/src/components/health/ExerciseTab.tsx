@@ -40,6 +40,9 @@ export default function ExerciseTab() {
   const updatePurpose = async (purpose: string) => {
     try {
       await healthApi.updateUserHealthProfile({ exercise_purpose: purpose });
+      if (user) {
+        updateUser({ ...user, profile: { ...user.profile, exercise_purpose: purpose as any } });
+      }
       toast.success('운동 목적이 업데이트되었습니다.');
     } catch {
       toast.error('업데이트에 실패했습니다.');

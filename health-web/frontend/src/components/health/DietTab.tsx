@@ -1,8 +1,9 @@
 import { useState, useCallback } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { Plus, Camera, Flame, Trash2 } from 'lucide-react';
+import { Plus, Camera, Flame, Trash2, CheckSquare } from 'lucide-react';
 import { useDropzone } from 'react-dropzone';
 import { healthApi } from '@/services/api';
+import { useAuthStore } from '@/store/authStore';
 import type { DietLog } from '@/types';
 import { format } from 'date-fns';
 import toast from 'react-hot-toast';
@@ -22,6 +23,7 @@ const MEAL_TYPES = [
 ];
 
 export default function DietTab() {
+  const { user, updateUser } = useAuthStore();
   const qc = useQueryClient();
   const [showForm, setShowForm] = useState(false);
   const [today] = useState(format(new Date(), 'yyyy-MM-dd'));
@@ -47,6 +49,18 @@ export default function DietTab() {
       toast.success('식단이 저장되었습니다.');
     },
   });
+
+  const updateDietPurpose = async (purpose: string) => {
+    try {
+      await healthApi.updateUserHealthProfile({ diet_purpose: purpose });
+      if (user) {
+        updateUser({ ...user, profile: { ...user.profile, diet_purpose: purpose as any } });
+      }
+      toast.success('식단 목적이 업데이트되었습니다.');
+    } catch {
+      toast.error('업데이트에 실패했습니다.');
+    }
+  };
 
   const addFoodToMeal = (food: { name: string; calories: number; amount: string }) => {
     if (!food.name) return;
@@ -100,8 +114,18 @@ export default function DietTab() {
         <h2 className="font-semibold text-gray-900 mb-3">식단 목적</h2>
         <div className="flex flex-wrap gap-2">
           {DIET_PURPOSE.map((o) => (
-            <button key={o.value} className="px-4 py-2 rounded-lg border-2 border-gray-200 text-sm font-medium text-gray-600 hover:border-primary-300">
+            <button
+              key={o.value}
+              onClick={() => updateDietPurpose(o.value)}
+              className={`px-4 py-2 rounded-lg border-2 text-sm font-medium transition-colors
+                ${user?.profile?.diet_purpose === o.value
+                  ? 'border-primary-600 bg-primary-50 text-primary-700'
+                  : 'border-gray-200 text-gray-600 hover:border-primary-300'}`}
+            >
               {o.label}
+              {user?.profile?.diet_purpose === o.value && (
+                <CheckSquare className="inline w-4 h-4 ml-1" />
+              )}
             </button>
           ))}
         </div>

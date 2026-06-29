@@ -36,11 +36,16 @@ export const authApi = {
     name?: string;
   }) => api.post('/auth/register', data),
   me: () => api.get('/auth/me'),
+  meWithToken: (token: string) =>
+    api.get('/auth/me', { headers: { Authorization: `Bearer ${token}` } }),
   updateProfile: (data: object) => api.put('/auth/profile', data),
   changePassword: (data: { current_password: string; new_password: string }) =>
     api.put('/auth/password', data),
   googleLogin: (code: string) => api.post('/auth/google', { code }),
   naverLogin: (code: string) => api.post('/auth/naver', { code }),
+  forgotPassword: (email: string) => api.post('/auth/forgot-password', { email }),
+  resetPassword: (token: string, new_password: string) =>
+    api.post('/auth/reset-password', { token, new_password }),
 };
 
 // ─── Board ───

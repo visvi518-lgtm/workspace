@@ -12,6 +12,9 @@ import FreeBoardPage from '@/pages/FreeBoardPage';
 import MyPage from '@/pages/MyPage';
 import HealthChatPage from '@/pages/HealthChatPage';
 import AdminPage from '@/pages/AdminPage';
+import OAuthCallbackPage from '@/pages/OAuthCallbackPage';
+import ForgotPasswordPage from '@/pages/ForgotPasswordPage';
+import ResetPasswordPage from '@/pages/ResetPasswordPage';
 
 function RequireAuth({ children }: { children: React.ReactNode }) {
   const isAuthenticated = useAuthStore((s) => s.isAuthenticated);
@@ -32,6 +35,9 @@ export default function App() {
         <Route path="/" element={<HomePage />} />
         <Route path="/login" element={<LoginPage />} />
         <Route path="/register" element={<RegisterPage />} />
+        <Route path="/auth/callback" element={<OAuthCallbackPage />} />
+        <Route path="/forgot-password" element={<ForgotPasswordPage />} />
+        <Route path="/reset-password" element={<ResetPasswordPage />} />
         <Route path="/board/:boardType" element={<HealthBoardPage />} />
         <Route path="/board/:boardType/:id" element={<PostDetailPage />} />
 

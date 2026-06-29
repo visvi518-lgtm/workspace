@@ -8,7 +8,7 @@ export default function Footer() {
         <div className="flex flex-col md:flex-row items-center justify-between gap-4">
           <div className="flex items-center gap-2 text-primary-600 font-bold text-lg">
             <Heart className="w-5 h-5 fill-current" />
-            헬스케어
+            닥터노트AI
           </div>
           <p className="text-sm text-gray-500">
             본 서비스의 건강 상담은 참고용이며, 의료 진단을 대체하지 않습니다.
@@ -19,7 +19,7 @@ export default function Footer() {
           </div>
         </div>
         <p className="text-center text-xs text-gray-400 mt-6">
-          © 2024 헬스케어. All rights reserved.
+          © 2024 닥터노트AI. All rights reserved.
         </p>
       </div>
     </footer>

@@ -66,24 +66,44 @@ export default function HomePage() {
       </section>
 
       {/* Quick links */}
-      <section className="grid grid-cols-2 md:grid-cols-4 gap-4">
-        {[
-          { icon: Heart, label: '건강정보', to: '/board/health', color: 'text-red-500 bg-red-50' },
-          { icon: Dumbbell, label: '운동정보', to: '/board/exercise', color: 'text-blue-500 bg-blue-50' },
-          { icon: Calendar, label: '건강관리', to: isAuthenticated ? '/health' : '/login', color: 'text-green-500 bg-green-50' },
-          { icon: MessageSquare, label: '건강상담', to: isAuthenticated ? '/chat' : '/login', color: 'text-purple-500 bg-purple-50' },
-        ].map((item) => (
-          <Link
-            key={item.label}
-            to={item.to}
-            className="card flex flex-col items-center gap-3 py-6 hover:shadow-md transition-shadow text-center"
-          >
-            <div className={`w-12 h-12 rounded-xl flex items-center justify-center ${item.color}`}>
-              <item.icon className="w-6 h-6" />
-            </div>
-            <span className="font-medium text-gray-700">{item.label}</span>
-          </Link>
-        ))}
+      <section className="grid grid-cols-2 gap-4">
+        {isAuthenticated ? (
+          <>
+            {[
+              { icon: Calendar, label: '운동 및 식단 기록', to: '/health',  color: 'text-green-500 bg-green-50' },
+              { icon: MessageSquare, label: 'AI 상담',         to: '/chat',   color: 'text-purple-500 bg-purple-50' },
+            ].map((item) => (
+              <Link
+                key={item.label}
+                to={item.to}
+                className="card flex flex-col items-center gap-3 py-6 hover:shadow-md transition-shadow text-center"
+              >
+                <div className={`w-12 h-12 rounded-xl flex items-center justify-center ${item.color}`}>
+                  <item.icon className="w-6 h-6" />
+                </div>
+                <span className="font-medium text-gray-700">{item.label}</span>
+              </Link>
+            ))}
+          </>
+        ) : (
+          <>
+            {[
+              { icon: Heart,    label: '건강정보', to: '/board/health',    color: 'text-red-500 bg-red-50'   },
+              { icon: Dumbbell, label: '운동정보', to: '/board/exercise',  color: 'text-blue-500 bg-blue-50' },
+            ].map((item) => (
+              <Link
+                key={item.label}
+                to={item.to}
+                className="card flex flex-col items-center gap-3 py-6 hover:shadow-md transition-shadow text-center"
+              >
+                <div className={`w-12 h-12 rounded-xl flex items-center justify-center ${item.color}`}>
+                  <item.icon className="w-6 h-6" />
+                </div>
+                <span className="font-medium text-gray-700">{item.label}</span>
+              </Link>
+            ))}
+          </>
+        )}
       </section>
 
       {/* Latest posts */}

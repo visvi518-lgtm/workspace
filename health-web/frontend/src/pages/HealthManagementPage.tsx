@@ -19,7 +19,7 @@ export default function HealthManagementPage() {
 
   return (
     <div className="space-y-6">
-      <h1 className="text-2xl font-bold text-gray-900">건강관리</h1>
+      <h1 className="text-2xl font-bold text-gray-900">운동 및 식단 기록</h1>
 
       {/* Tab bar */}
       <div className="flex gap-1 bg-gray-100 rounded-xl p-1">

@@ -2,7 +2,7 @@ from pydantic_settings import BaseSettings
 
 
 class Settings(BaseSettings):
-    APP_NAME: str = "헬스케어"
+    APP_NAME: str = "닥터노트AI"
     DATABASE_URL: str = "postgresql://postgres:password@localhost:5432/healthweb"
     SECRET_KEY: str = "change-this-secret-key"
     ALGORITHM: str = "HS256"
@@ -21,6 +21,7 @@ class Settings(BaseSettings):
     SMTP_PASSWORD: str = ""
 
     FRONTEND_URL: str = "http://localhost:3000"
+    BACKEND_URL: str = "http://localhost:8000"
 
     class Config:
         env_file = ".env"

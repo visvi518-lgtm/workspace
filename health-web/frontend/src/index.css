@@ -52,6 +52,14 @@
 .react-calendar__tile--now {
   @apply bg-primary-100 !important;
 }
+/* 오늘 날짜 글자는 항상 검정색 유지 */
+.react-calendar__tile--now abbr {
+  color: #111827 !important;
+}
+.react-calendar__tile--now:hover abbr,
+.react-calendar__tile--now:focus abbr {
+  color: #111827 !important;
+}
 
 /* Scrollbar */
 ::-webkit-scrollbar {
