@@ -3,11 +3,6 @@ import { Link, NavLink, useNavigate } from 'react-router-dom';
 import { Menu, X, Heart, ChevronDown, User, LogOut, Settings, Shield } from 'lucide-react';
 import { useAuthStore } from '@/store/authStore';
 
-const boardLinks = [
-  { to: '/board/health', label: '건강정보' },
-  { to: '/board/exercise', label: '운동정보' },
-];
-
 export default function Header() {
   const [menuOpen, setMenuOpen] = useState(false);
   const [dropOpen, setDropOpen] = useState(false);
@@ -32,25 +27,6 @@ export default function Header() {
 
           {/* Desktop nav */}
           <nav className="hidden md:flex items-center gap-6">
-            <div className="relative group">
-              <button className="flex items-center gap-1 text-gray-700 hover:text-primary-600 font-medium">
-                건강정보 <ChevronDown className="w-4 h-4" />
-              </button>
-              <div className="absolute top-full left-0 mt-1 w-36 bg-white rounded-lg shadow-lg border
-                              border-gray-100 opacity-0 invisible group-hover:opacity-100 group-hover:visible
-                              transition-all duration-200 py-1">
-                {boardLinks.map((l) => (
-                  <NavLink
-                    key={l.to}
-                    to={l.to}
-                    className="block px-4 py-2 text-sm text-gray-700 hover:bg-primary-50 hover:text-primary-600"
-                  >
-                    {l.label}
-                  </NavLink>
-                ))}
-              </div>
-            </div>
-
             {isAuthenticated && (
               <>
                 <NavLink
@@ -62,14 +38,6 @@ export default function Header() {
                   건강관리
                 </NavLink>
                 <NavLink
-                  to="/free-board"
-                  className={({ isActive }) =>
-                    `font-medium ${isActive ? 'text-primary-600' : 'text-gray-700 hover:text-primary-600'}`
-                  }
-                >
-                  자유게시판
-                </NavLink>
-                <NavLink
                   to="/chat"
                   className={({ isActive }) =>
                     `font-medium ${isActive ? 'text-primary-600' : 'text-gray-700 hover:text-primary-600'}`
@@ -78,6 +46,32 @@ export default function Header() {
                   건강상담
                 </NavLink>
               </>
+            )}
+            <NavLink
+              to="/board/health"
+              className={({ isActive }) =>
+                `font-medium ${isActive ? 'text-primary-600' : 'text-gray-700 hover:text-primary-600'}`
+              }
+            >
+              건강정보
+            </NavLink>
+            <NavLink
+              to="/board/exercise"
+              className={({ isActive }) =>
+                `font-medium ${isActive ? 'text-primary-600' : 'text-gray-700 hover:text-primary-600'}`
+              }
+            >
+              운동정보
+            </NavLink>
+            {isAuthenticated && (
+              <NavLink
+                to="/free-board"
+                className={({ isActive }) =>
+                  `font-medium ${isActive ? 'text-primary-600' : 'text-gray-700 hover:text-primary-600'}`
+                }
+              >
+                자유게시판
+              </NavLink>
             )}
           </nav>
 
@@ -145,21 +139,17 @@ export default function Header() {
       {/* Mobile menu */}
       {menuOpen && (
         <div className="md:hidden border-t border-gray-100 bg-white py-3 px-4 space-y-1">
-          {boardLinks.map((l) => (
-            <NavLink
-              key={l.to}
-              to={l.to}
-              className="block py-2 px-3 rounded-lg text-gray-700 hover:bg-gray-50"
-              onClick={() => setMenuOpen(false)}
-            >
-              {l.label}
-            </NavLink>
-          ))}
           {isAuthenticated && (
             <>
               <NavLink to="/health" className="block py-2 px-3 rounded-lg text-gray-700 hover:bg-gray-50" onClick={() => setMenuOpen(false)}>건강관리</NavLink>
-              <NavLink to="/free-board" className="block py-2 px-3 rounded-lg text-gray-700 hover:bg-gray-50" onClick={() => setMenuOpen(false)}>자유게시판</NavLink>
               <NavLink to="/chat" className="block py-2 px-3 rounded-lg text-gray-700 hover:bg-gray-50" onClick={() => setMenuOpen(false)}>건강상담</NavLink>
+            </>
+          )}
+          <NavLink to="/board/health" className="block py-2 px-3 rounded-lg text-gray-700 hover:bg-gray-50" onClick={() => setMenuOpen(false)}>건강정보</NavLink>
+          <NavLink to="/board/exercise" className="block py-2 px-3 rounded-lg text-gray-700 hover:bg-gray-50" onClick={() => setMenuOpen(false)}>운동정보</NavLink>
+          {isAuthenticated && (
+            <>
+              <NavLink to="/free-board" className="block py-2 px-3 rounded-lg text-gray-700 hover:bg-gray-50" onClick={() => setMenuOpen(false)}>자유게시판</NavLink>
               <NavLink to="/my-page" className="block py-2 px-3 rounded-lg text-gray-700 hover:bg-gray-50" onClick={() => setMenuOpen(false)}>마이페이지</NavLink>
               {user?.is_admin && (
                 <NavLink to="/admin" className="block py-2 px-3 rounded-lg text-primary-600 hover:bg-primary-50" onClick={() => setMenuOpen(false)}>관리자</NavLink>
