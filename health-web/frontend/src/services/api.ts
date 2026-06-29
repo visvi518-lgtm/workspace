@@ -108,6 +108,15 @@ export const adminApi = {
   unbanUser: (userId: number) => api.post(`/admin/users/${userId}/unban`),
   deletePost: (postId: number) => api.delete(`/admin/posts/${postId}`),
   getStats: () => api.get('/admin/stats'),
+  // 콘텐츠 관리
+  getContent: (params?: { board_type?: string; crawl_status?: string; page?: number }) =>
+    api.get('/admin/content', { params }),
+  publishContent: (postId: number) => api.post(`/admin/content/${postId}/publish`),
+  rejectContent: (postId: number) => api.post(`/admin/content/${postId}/reject`),
+  seedContent: () => api.post('/admin/content/seed'),
+  triggerCrawl: (boardType: 'health' | 'exercise') => api.post(`/admin/crawl/${boardType}`),
+  getCrawlStatus: () => api.get('/admin/crawl/status'),
+  stopCrawl: () => api.post('/admin/crawl/stop'),
 };
 
 export default api;

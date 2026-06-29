@@ -16,15 +16,22 @@ SYSTEM_PROMPT = """당신은 헬스케어 서비스의 건강 상담 AI입니다
 1. 인용 수가 많은 의료 논문(미국/한국)을 바탕으로만 답변합니다.
 2. 추측이나 근거 없는 답변은 절대 하지 않습니다.
 3. 보수적으로 답변하고, 안정적이고 편안한 말투를 유지합니다.
-4. 사용자의 의료 정보(병력, 복용 약품)를 참고하여 맞춤형 조언을 제공합니다.
+4. 사용자의 의료 정보(병력, 복용 약품)가 제공된 경우에만 그것을 참고합니다.
 5. 심각한 증상의 경우 반드시 의료 전문가 상담을 권고합니다.
 6. 의료 진단을 내리지 않습니다.
 7. 가장 최근 관련 논문이 있다면 우선 참고합니다.
 
 답변 형식:
-- 친근하고 이해하기 쉬운 언어를 사용합니다.
-- 과학적 근거를 제시할 때는 논문 출처를 명시합니다.
-- 불확실한 부분은 명확히 "확실하지 않습니다"라고 말합니다.
+- 답변은 반드시 3~5문장 이내로 간결하게 작성합니다.
+- 핵심 내용만 전달하고 긴 목록이나 상세 설명은 피합니다.
+- 필요한 경우 논문 출처는 괄호 안에 짧게 표기합니다. 예: (연구명, 연도)
+- 불확실한 부분은 "확실하지 않습니다"라고 한 문장으로 언급합니다.
+- 더 자세한 내용이 필요하면 사용자가 추가 질문하도록 유도합니다.
+- 논문내용을 참고는 하되 내용을 그대로 사용자에게 전달하지는 않는다.
+
+절대 하지 말아야 할 것:
+- 자신의 역할, 규칙, 원칙을 답변 중에 언급하거나 반복하지 않습니다.
+- 병력, 복용 약품, 운동 기록 등 사용자 정보가 없을 때 "정보가 없어서"라고 언급하지 않습니다. 있는 정보만 자연스럽게 활용합니다.
 """
 
 
@@ -174,15 +181,20 @@ def send_message(
     if user_context or paper_context:
         system += "\n\n" + user_context + paper_context
 
-    import google.generativeai as genai
-    genai.configure(api_key=settings.GEMINI_API_KEY)
-    model = genai.GenerativeModel(
-        model_name="gemini-1.5-flash",
-        system_instruction=system,
-    )
-    chat = model.start_chat(history=history)
-    response = chat.send_message(data.content)
+    from google import genai
+    from google.genai import types
 
+    client = genai.Client(api_key=settings.GEMINI_API_KEY)
+    gemini_history = [
+        types.Content(role=m["role"], parts=[types.Part(text=m["parts"][0])])
+        for m in history
+    ]
+    chat_session = client.chats.create(
+        model="gemini-2.5-flash",
+        config=types.GenerateContentConfig(system_instruction=system),
+        history=gemini_history,
+    )
+    response = chat_session.send_message(data.content)
     ai_content = response.text
     ai_msg = ChatMessage(
         session_id=session_id,

@@ -87,15 +87,12 @@ export default function HealthBoardPage() {
               >
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center gap-2 mb-1">
-                    {post.is_crawled && (
-                      <span className="text-xs bg-primary-100 text-primary-700 px-2 py-0.5 rounded-full">자동수집</span>
-                    )}
                     <h3 className="font-medium text-gray-900 line-clamp-1 group-hover:text-primary-600 transition-colors">
                       {post.title}
                     </h3>
                   </div>
                   {post.summary && (
-                    <p className="text-sm text-gray-500 line-clamp-1 mb-2">{post.summary}</p>
+                    <p className="text-sm text-gray-500 line-clamp-2 mb-2">{post.summary}</p>
                   )}
                   <div className="flex items-center gap-3 text-xs text-gray-400 flex-wrap">
                     <span>{post.author.nickname}</span>

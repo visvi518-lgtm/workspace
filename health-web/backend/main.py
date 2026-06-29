@@ -5,6 +5,8 @@ from apscheduler.schedulers.background import BackgroundScheduler
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
+from sqlalchemy import text
+
 from app.api.routes import auth, board, health, chat, admin
 from app.core.config import settings
 from app.core.database import Base, engine
@@ -18,6 +20,15 @@ scheduler = BackgroundScheduler(timezone="Asia/Seoul")
 async def lifespan(app: FastAPI):
     # Create tables
     Base.metadata.create_all(bind=engine)
+
+    # SQLite column migration (기존 DB에 신규 컬럼 추가)
+    with engine.connect() as conn:
+        try:
+            conn.execute(text("ALTER TABLE posts ADD COLUMN crawl_status VARCHAR(20)"))
+            conn.commit()
+            logging.getLogger(__name__).info("Migration: posts.crawl_status 컬럼 추가")
+        except Exception:
+            pass  # 이미 존재하는 경우 무시
 
     # Setup schedules
     from app.services.crawler import crawl_health, crawl_exercise

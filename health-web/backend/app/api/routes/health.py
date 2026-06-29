@@ -242,19 +242,21 @@ async def analyze_calories(
         raise HTTPException(status_code=400, detail="파일 크기가 너무 큽니다. (최대 10MB)")
 
     import json
-    import google.generativeai as genai
+    from google import genai
+    from google.genai import types
     from PIL import Image as PILImage
 
-    genai.configure(api_key=settings.GEMINI_API_KEY)
-    model = genai.GenerativeModel("gemini-1.5-flash")
-
+    client = genai.Client(api_key=settings.GEMINI_API_KEY)
     img = PILImage.open(io.BytesIO(content))
     prompt = (
         "이 음식 사진을 보고 다음 JSON 형식으로만 답해주세요:\n"
         '{"name": "음식 이름", "calories": 칼로리(숫자), "amount": "양 설명"}\n'
         "칼로리는 1인분 기준으로 추정하세요. JSON만 출력하세요."
     )
-    response = model.generate_content([prompt, img])
+    response = client.models.generate_content(
+        model="gemini-2.5-flash",
+        contents=[prompt, img],
+    )
 
     try:
         text = response.text.strip().strip("```json").strip("```").strip()

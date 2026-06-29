@@ -48,6 +48,18 @@ export default function DietTab() {
     },
   });
 
+  const addFoodToMeal = (food: { name: string; calories: number; amount: string }) => {
+    if (!food.name) return;
+    const meals = [...form.meals];
+    const idx = meals.findIndex((m) => m.meal_type === mealType);
+    if (idx >= 0) {
+      meals[idx] = { ...meals[idx], foods: [...meals[idx].foods, food] };
+    } else {
+      meals.push({ meal_type: mealType, foods: [food] });
+    }
+    setForm((prev: typeof form) => ({ ...prev, meals }));
+  };
+
   const onDrop = useCallback(async (files: File[]) => {
     if (!files[0]) return;
     setAnalyzing(true);
@@ -56,13 +68,15 @@ export default function DietTab() {
       fd.append('image', files[0]);
       const res = await healthApi.analyzeCalories(fd);
       setAiResult(res.data);
-      toast.success('칼로리 분석이 완료되었습니다.');
+      // AI 분석 결과를 바로 식단에 자동 추가
+      addFoodToMeal(res.data);
+      toast.success(`칼로리 분석 완료! ${res.data.name} ${res.data.calories}kcal가 추가되었습니다.`);
     } catch {
       toast.error('이미지 분석에 실패했습니다.');
     } finally {
       setAnalyzing(false);
     }
-  }, []);
+  }, [mealType, form.meals]);
 
   const { getRootProps, getInputProps, isDragActive } = useDropzone({
     onDrop,
@@ -71,21 +85,10 @@ export default function DietTab() {
   });
 
   const addFood = () => {
-    const food = aiResult
-      ? { name: aiResult.name, calories: aiResult.calories, amount: aiResult.amount }
-      : { name: foodName, calories: Number(foodCal), amount: foodAmount };
-
+    const food = { name: foodName, calories: Number(foodCal), amount: foodAmount };
     if (!food.name) return;
-
-    const meals = [...form.meals];
-    const idx = meals.findIndex((m) => m.meal_type === mealType);
-    if (idx >= 0) {
-      meals[idx] = { ...meals[idx], foods: [...meals[idx].foods, food] };
-    } else {
-      meals.push({ meal_type: mealType, foods: [food] });
-    }
-    setForm({ ...form, meals });
-    setFoodName(''); setFoodCal(''); setFoodAmount(''); setAiResult(null);
+    addFoodToMeal(food);
+    setFoodName(''); setFoodCal(''); setFoodAmount('');
   };
 
   const totalCalories = form.meals.reduce((sum, m) => sum + m.foods.reduce((s: number, f: any) => s + f.calories, 0), 0);
@@ -134,10 +137,12 @@ export default function DietTab() {
                 {analyzing ? (
                   <p className="text-sm text-gray-500">분석 중...</p>
                 ) : aiResult ? (
-                  <div className="text-sm">
+                  <div className="text-sm space-y-1">
+                    <p className="text-xs text-green-600 font-medium">✓ 식단에 자동 추가됨</p>
                     <p className="font-medium text-gray-900">{aiResult.name}</p>
                     <p className="text-primary-600 font-bold">{aiResult.calories} kcal</p>
                     <p className="text-gray-500">{aiResult.amount}</p>
+                    <p className="text-xs text-gray-400 mt-1">다른 사진을 클릭하여 추가 분석</p>
                   </div>
                 ) : (
                   <p className="text-sm text-gray-500">

@@ -20,6 +20,7 @@ class Post(Base):
     tags = Column(JSON, default=list)
     view_count = Column(Integer, default=0)
     is_crawled = Column(Boolean, default=False)
+    crawl_status = Column(String(20), nullable=True)  # draft | published | rejected (crawled posts only)
     is_deleted = Column(Boolean, default=False)
 
     created_at = Column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc))

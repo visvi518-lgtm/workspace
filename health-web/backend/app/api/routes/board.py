@@ -2,7 +2,7 @@ from typing import Optional
 
 from fastapi import APIRouter, Depends, HTTPException, Query, status
 from pydantic import BaseModel
-from sqlalchemy import or_
+from sqlalchemy import and_, or_
 from sqlalchemy.orm import Session
 
 from app.api.deps import get_current_user, get_optional_user
@@ -70,7 +70,12 @@ def list_posts(
     if board_type not in VALID_BOARD_TYPES:
         raise HTTPException(status_code=400, detail="유효하지 않은 게시판 유형입니다.")
 
-    query = db.query(Post).filter(Post.board_type == board_type, Post.is_deleted.is_(False))
+    query = db.query(Post).filter(
+        Post.board_type == board_type,
+        Post.is_deleted.is_(False),
+        # 크롤링 게시물은 관리자가 published 처리한 것만 노출
+        or_(Post.is_crawled.is_(False), Post.crawl_status == "published"),
+    )
 
     if search:
         query = query.filter(

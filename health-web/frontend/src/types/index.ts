@@ -42,6 +42,7 @@ export interface Post {
   created_at: string;
   updated_at: string;
   is_crawled: boolean;
+  crawl_status?: 'draft' | 'published' | 'rejected';
 }
 
 export interface Comment {

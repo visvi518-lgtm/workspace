@@ -43,9 +43,6 @@ export default function PostDetailPage() {
       <div className="card">
         <div className="flex items-start justify-between gap-4 mb-4">
           <div className="flex-1">
-            {post.is_crawled && (
-              <span className="text-xs bg-primary-100 text-primary-700 px-2 py-0.5 rounded-full mr-2">자동수집</span>
-            )}
             <h1 className="text-xl font-bold text-gray-900">{post.title}</h1>
           </div>
           {user?.is_admin && (
