@@ -15,4 +15,4 @@ python-dotenv==1.0.1
 pydantic-settings==2.2.1
 pydantic[email]==2.6.1
 aiofiles==23.2.1
-Pillow==10.2.0
+Pillow>=10.3.0
