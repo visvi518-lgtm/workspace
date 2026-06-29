@@ -1,103 +1,85 @@
+"""포트폴리오 탭 — 보유 종목 목록"""
 import customtkinter as ctk
-from tkinter import ttk
-from datetime import datetime
+
+
+COLS = [
+    ("종목명",    160, "name"),
+    ("시장",      50,  "market"),
+    ("모드",      60,  "mode"),
+    ("수량",      60,  "quantity"),
+    ("평균단가",  100, "avg_price"),
+    ("현재가",    100, "cur_price"),
+    ("평가금액",  110, "val"),
+    ("손익",      100, "pnl"),
+    ("손익률",    80,  "pnl_pct"),
+]
 
 
 class PortfolioTab(ctk.CTkFrame):
+
     def __init__(self, parent, db, portfolio, auto_trader):
         super().__init__(parent, fg_color="transparent")
-        self.db = db
-        self.portfolio = portfolio
+        self.db          = db
+        self.portfolio   = portfolio
         self.auto_trader = auto_trader
+        self._rows: list = []
         self._build()
 
     def _build(self):
-        style = ttk.Style()
-        style.configure("Port.Treeview",
-            background="#1e1e2e", foreground="white",
-            rowheight=30, fieldbackground="#1e1e2e", font=("Malgun Gothic", 11))
-        style.configure("Port.Treeview.Heading",
-            background="#2b2b2b", foreground="#aaa", font=("Malgun Gothic", 11, "bold"))
-        style.map("Port.Treeview", background=[("selected", "#3a3a5c")])
+        # 헤더
+        hdr = ctk.CTkFrame(self, fg_color=("#252535", "#161626"), height=30)
+        hdr.pack(fill="x", padx=10, pady=(10, 0))
+        hdr.pack_propagate(False)
+        for label, width, _ in COLS:
+            ctk.CTkLabel(hdr, text=label, width=width,
+                         font=("Malgun Gothic", 10, "bold"),
+                         text_color="#90caf9", anchor="center").pack(side="left")
 
-        header = ctk.CTkFrame(self, fg_color="transparent")
-        header.pack(fill="x", padx=15, pady=(12, 5))
-        ctk.CTkLabel(header, text="보유 포트폴리오", font=("Malgun Gothic", 16, "bold")).pack(side="left")
-
-        table_frame = ctk.CTkFrame(self, corner_radius=10, fg_color=("#2b2b2b", "#1e1e2e"))
-        table_frame.pack(fill="both", expand=True, padx=15, pady=5)
-
-        cols = ("market", "name", "code", "qty", "avg", "current", "value", "pnl", "pnl_rate", "buy_date", "reason")
-        hdrs = [
-            ("market", "시장", 50),
-            ("name", "종목명", 120),
-            ("code", "코드", 80),
-            ("qty", "수량", 60),
-            ("avg", "평균단가", 90),
-            ("current", "현재가", 90),
-            ("value", "평가금액", 100),
-            ("pnl", "평가손익", 100),
-            ("pnl_rate", "수익률", 70),
-            ("buy_date", "매수일", 110),
-            ("reason", "매수 이유", 250),
-        ]
-        self.tree = ttk.Treeview(table_frame, style="Port.Treeview", show="headings", columns=cols)
-        for col, hdr, w in hdrs:
-            self.tree.heading(col, text=hdr)
-            self.tree.column(col, width=w, anchor="center")
-
-        sb = ttk.Scrollbar(table_frame, orient="horizontal", command=self.tree.xview)
-        self.tree.configure(xscrollcommand=sb.set)
-        self.tree.pack(fill="both", expand=True, padx=5, pady=5)
-        sb.pack(fill="x", padx=5)
-
-        # 합계 바
-        self.summary_label = ctk.CTkLabel(
-            self, text="", font=("Malgun Gothic", 12), text_color="gray"
+        # 스크롤 목록
+        self._scroll = ctk.CTkScrollableFrame(
+            self, fg_color="transparent",
+            scrollbar_button_color="#3a7bd5",
         )
-        self.summary_label.pack(pady=5)
+        self._scroll.pack(fill="both", expand=True, padx=10, pady=(0, 10))
 
     def update(self):
-        self.tree.delete(*self.tree.get_children())
-        prices = self.auto_trader.last_prices if self.auto_trader else {}
+        for w in self._scroll.winfo_children():
+            w.destroy()
+        self._rows.clear()
 
-        total_invest = 0
-        total_value = 0
+        positions = self.portfolio.positions
+        if not positions:
+            ctk.CTkLabel(self._scroll, text="보유 종목 없음",
+                         text_color="#555", font=("Malgun Gothic", 13)).pack(pady=40)
+            return
 
-        for pos in self.portfolio.get_positions():
-            key = (pos["code"], pos["market"])
-            cur = prices.get(key, pos["avg_price"])
-            invest = pos["avg_price"] * pos["quantity"]
-            val = cur * pos["quantity"]
-            pnl = val - invest
-            pnl_rate = pnl / invest * 100 if invest > 0 else 0
-            sign = "+" if pnl >= 0 else ""
-            tag = "up" if pnl >= 0 else "dn"
-            buy_date = pos["buy_date"][:16] if pos["buy_date"] else ""
-            self.tree.insert("", "end", tags=(tag,), values=(
-                pos["market"],
-                pos["name"],
-                pos["code"],
-                pos["quantity"],
-                f"{pos['avg_price']:,.0f}",
-                f"{cur:,.0f}",
-                f"{val:,.0f}",
-                f"{sign}{pnl:,.0f}",
-                f"{sign}{pnl_rate:.2f}%",
-                buy_date,
-                pos.get("buy_reason", ""),
-            ))
-            total_invest += invest
-            total_value += val
+        for i, ((code, market), pos) in enumerate(positions.items()):
+            bg  = "#1e1e2e" if i % 2 == 0 else "#16162a"
+            row = ctk.CTkFrame(self._scroll, fg_color=bg, height=30)
+            row.pack(fill="x", pady=1)
+            row.pack_propagate(False)
 
-        self.tree.tag_configure("up", foreground="#ef5350")
-        self.tree.tag_configure("dn", foreground="#42a5f5")
+            cur_price = pos["avg_price"]   # 현재가 없으면 매수가 표시
+            val       = cur_price * pos["quantity"]
+            pnl       = (cur_price - pos["avg_price"]) * pos["quantity"]
+            pnl_pct   = (cur_price - pos["avg_price"]) / pos["avg_price"] * 100 if pos["avg_price"] else 0
 
-        total_pnl = total_value - total_invest
-        total_rate = total_pnl / total_invest * 100 if total_invest > 0 else 0
-        sign = "+" if total_pnl >= 0 else ""
-        color = "#ef5350" if total_pnl >= 0 else "#42a5f5"
-        self.summary_label.configure(
-            text=f"총 투자금: {total_invest:,.0f}원  |  총 평가금액: {total_value:,.0f}원  |  총 손익: {sign}{total_pnl:,.0f}원 ({sign}{total_rate:.2f}%)",
-            text_color=color,
-        )
+            p_color = "#66bb6a" if pnl >= 0 else "#e57373"
+
+            data = {
+                "name":      pos["name"],
+                "market":    market,
+                "mode":      pos.get("mode", "swing"),
+                "quantity":  f'{pos["quantity"]:.0f}',
+                "avg_price": f'{pos["avg_price"]:,.0f}',
+                "cur_price": f'{cur_price:,.0f}',
+                "val":       f'{val:,.0f}',
+                "pnl":       f'{pnl:+,.0f}',
+                "pnl_pct":   f'{pnl_pct:+.2f}%',
+            }
+
+            for label, width, key in COLS:
+                color = p_color if key in ("pnl", "pnl_pct") else "#ddd"
+                ctk.CTkLabel(row, text=data[key], width=width,
+                             font=("Malgun Gothic", 11),
+                             text_color=color, anchor="center").pack(side="left")

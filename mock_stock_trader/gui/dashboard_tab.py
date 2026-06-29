@@ -1,190 +1,109 @@
+"""대시보드 탭 — 총 자산, 수익률, 보유 종목, 자산 차트"""
 import customtkinter as ctk
-from tkinter import ttk
 import matplotlib
 matplotlib.use("Agg")
 import matplotlib.pyplot as plt
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
-from matplotlib.figure import Figure
-import matplotlib.dates as mdates
-from datetime import datetime
-
-
-def _fmt_krw(v: float) -> str:
-    return f"{v:,.0f}원"
-
-def _fmt_pct(v: float) -> str:
-    sign = "+" if v >= 0 else ""
-    return f"{sign}{v:.2f}%"
-
-def _color(v: float) -> str:
-    return "#ef5350" if v >= 0 else "#42a5f5"
-
-
-class SummaryCard(ctk.CTkFrame):
-    def __init__(self, parent, title: str, **kwargs):
-        super().__init__(parent, corner_radius=10, **kwargs)
-        self.configure(fg_color=("#2b2b2b", "#1e1e2e"))
-        ctk.CTkLabel(self, text=title, font=("Malgun Gothic", 11), text_color="gray").pack(pady=(10, 2))
-        self.value_label = ctk.CTkLabel(self, text="—", font=("Malgun Gothic", 18, "bold"))
-        self.value_label.pack(pady=(0, 10))
-
-    def set(self, text: str, color: str = "white"):
-        self.value_label.configure(text=text, text_color=color)
+import config
 
 
 class DashboardTab(ctk.CTkFrame):
+
     def __init__(self, parent, db, portfolio, auto_trader):
         super().__init__(parent, fg_color="transparent")
-        self.db = db
-        self.portfolio = portfolio
+        self.db          = db
+        self.portfolio   = portfolio
         self.auto_trader = auto_trader
+        self._fig  = None
+        self._ax   = None
+        self._canvas = None
         self._build()
 
     def _build(self):
-        # 상단 요약 카드 (6개)
-        card_frame = ctk.CTkFrame(self, fg_color="transparent")
-        card_frame.pack(fill="x", padx=15, pady=(10, 5))
-        for i in range(6):
-            card_frame.columnconfigure(i, weight=1)
+        # 상단 지표 카드
+        cards = ctk.CTkFrame(self, fg_color="transparent")
+        cards.pack(fill="x", padx=10, pady=(10, 6))
 
-        self.card_total = SummaryCard(card_frame, "총 자산")
-        self.card_total.grid(row=0, column=0, padx=4, sticky="ew")
-        self.card_profit = SummaryCard(card_frame, "누적 손익")
-        self.card_profit.grid(row=0, column=1, padx=4, sticky="ew")
-        self.card_rate = SummaryCard(card_frame, "누적 수익률")
-        self.card_rate.grid(row=0, column=2, padx=4, sticky="ew")
-        self.card_daily = SummaryCard(card_frame, "일일 손익 (2% 목표)")
-        self.card_daily.grid(row=0, column=3, padx=4, sticky="ew")
-        self.card_cash = SummaryCard(card_frame, "가용 현금")
-        self.card_cash.grid(row=0, column=4, padx=4, sticky="ew")
-        self.card_trades = SummaryCard(card_frame, "오늘 거래")
-        self.card_trades.grid(row=0, column=5, padx=4, sticky="ew")
+        self.card_total  = self._card(cards, "총 자산",   "—")
+        self.card_profit = self._card(cards, "총 손익",   "—")
+        self.card_pct    = self._card(cards, "수익률",    "—")
+        self.card_cash   = self._card(cards, "가용 현금", "—")
+        self.card_pos    = self._card(cards, "보유 종목", "—")
 
-        # 중단: 보유종목 + 차트
-        mid = ctk.CTkFrame(self, fg_color="transparent")
-        mid.pack(fill="both", expand=True, padx=15, pady=5)
-        mid.columnconfigure(0, weight=1)
-        mid.columnconfigure(1, weight=3)
-        mid.rowconfigure(0, weight=1)
+        for c in (self.card_total, self.card_profit, self.card_pct,
+                  self.card_cash, self.card_pos):
+            c.pack(side="left", expand=True, fill="x", padx=4)
 
-        # 보유 종목 패널
-        left = ctk.CTkFrame(mid, corner_radius=10, fg_color=("#2b2b2b", "#1e1e2e"))
-        left.grid(row=0, column=0, padx=(0, 5), sticky="nsew")
-        ctk.CTkLabel(left, text="보유 종목", font=("Malgun Gothic", 13, "bold")).pack(pady=(10, 5))
+        # 차트
+        chart_f = ctk.CTkFrame(self, corner_radius=10, fg_color=("#1e1e2e", "#13131f"))
+        chart_f.pack(fill="both", expand=True, padx=10, pady=(0, 10))
+        ctk.CTkLabel(chart_f, text="자산 추이",
+                     font=("Malgun Gothic", 12, "bold"), text_color="#aaa",
+                     ).pack(anchor="w", padx=14, pady=(8, 0))
 
-        style = ttk.Style()
-        style.theme_use("default")
-        style.configure("Dark.Treeview",
-            background="#1e1e2e", foreground="white",
-            rowheight=28, fieldbackground="#1e1e2e", font=("Malgun Gothic", 10))
-        style.configure("Dark.Treeview.Heading",
-            background="#2b2b2b", foreground="gray", font=("Malgun Gothic", 10, "bold"))
-        style.map("Dark.Treeview", background=[("selected", "#3a3a5c")])
+        self._chart_frame = ctk.CTkFrame(chart_f, fg_color="transparent")
+        self._chart_frame.pack(fill="both", expand=True, padx=8, pady=8)
+        self._init_chart()
 
-        self.holdings_tree = ttk.Treeview(
-            left, style="Dark.Treeview", show="headings",
-            columns=("name", "price", "rate"), height=8
-        )
-        for col, hdr, w in [("name", "종목", 80), ("price", "현재가", 80), ("rate", "손익률", 70)]:
-            self.holdings_tree.heading(col, text=hdr)
-            self.holdings_tree.column(col, width=w, anchor="center")
-        self.holdings_tree.pack(fill="both", expand=True, padx=8, pady=(0, 10))
+    def _card(self, parent, label: str, value: str) -> ctk.CTkFrame:
+        f = ctk.CTkFrame(parent, corner_radius=10, fg_color=("#2b2b2b", "#1e1e2e"))
+        ctk.CTkLabel(f, text=label,
+                     font=("Malgun Gothic", 10), text_color="#888").pack(pady=(8, 2))
+        lbl = ctk.CTkLabel(f, text=value,
+                           font=("Malgun Gothic", 15, "bold"), text_color="white")
+        lbl.pack(pady=(0, 8))
+        f._val_label = lbl
+        return f
 
-        # 수익률 차트
-        right = ctk.CTkFrame(mid, corner_radius=10, fg_color=("#2b2b2b", "#1e1e2e"))
-        right.grid(row=0, column=1, padx=(5, 0), sticky="nsew")
-        ctk.CTkLabel(right, text="포트폴리오 수익률 추이", font=("Malgun Gothic", 13, "bold")).pack(pady=(10, 0))
-
-        self.fig = Figure(figsize=(5, 3), dpi=96, facecolor="#1e1e2e")
-        self.ax = self.fig.add_subplot(111)
-        self.ax.set_facecolor("#1e1e2e")
-        self.canvas = FigureCanvasTkAgg(self.fig, master=right)
-        self.canvas.get_tk_widget().pack(fill="both", expand=True, padx=8, pady=(0, 10))
-
-        # 최근 거래 로그
-        bottom = ctk.CTkFrame(self, corner_radius=10, fg_color=("#2b2b2b", "#1e1e2e"))
-        bottom.pack(fill="x", padx=15, pady=(0, 10))
-        ctk.CTkLabel(bottom, text="최근 거래", font=("Malgun Gothic", 12, "bold")).pack(anchor="w", padx=10, pady=(8, 3))
-
-        self.recent_tree = ttk.Treeview(
-            bottom, style="Dark.Treeview", show="headings",
-            columns=("time", "type", "name", "price", "profit", "reason"), height=5
-        )
-        hdrs = [("time", "시간", 80), ("type", "구분", 50), ("name", "종목", 90),
-                ("price", "가격", 90), ("profit", "손익", 80), ("reason", "매매 이유", 300)]
-        for col, hdr, w in hdrs:
-            self.recent_tree.heading(col, text=hdr)
-            self.recent_tree.column(col, width=w, anchor="center")
-        self.recent_tree.pack(fill="x", padx=8, pady=(0, 8))
+    def _init_chart(self):
+        self._fig, self._ax = plt.subplots(figsize=(8, 3), facecolor="#13131f")
+        self._ax.set_facecolor("#13131f")
+        self._ax.tick_params(colors="#666", labelsize=8)
+        for spine in self._ax.spines.values():
+            spine.set_edgecolor("#333")
+        self._fig.tight_layout(pad=0.8)
+        self._canvas = FigureCanvasTkAgg(self._fig, master=self._chart_frame)
+        self._canvas.get_tk_widget().pack(fill="both", expand=True)
+        self._canvas.draw()
 
     def update(self):
-        prices = self.auto_trader.last_prices if self.auto_trader else {}
-        pnl = self.portfolio.get_pnl(prices)
+        initial = float(self.db.get_setting("initial_capital",
+                        config.DEFAULT_INITIAL_CAPITAL))
 
-        self.card_total.set(_fmt_krw(pnl["total_value"]))
-        self.card_profit.set(_fmt_krw(pnl["profit"]), _color(pnl["profit"]))
-        self.card_rate.set(_fmt_pct(pnl["profit_rate"]), _color(pnl["profit_rate"]))
-        self.card_cash.set(_fmt_krw(pnl["cash"]))
-        self.card_trades.set(f"{self.db.today_trade_count()}건")
+        # 현재가 없으면 매수가 기준
+        current_prices = {}
+        for (code, mkt), pos in self.portfolio.positions.items():
+            current_prices[(code, mkt)] = pos["avg_price"]
 
-        # 일일 손익 카드 (복리 목표 2%)
-        daily_pnl = self.auto_trader.daily_pnl if self.auto_trader else 0.0
-        init_cap  = self.portfolio.initial_capital
-        daily_pct = daily_pnl / init_cap * 100 if init_cap > 0 else 0
-        target    = float(self.db.get_setting("daily_target", "0.02"))
-        sign = "+" if daily_pnl >= 0 else ""
-        daily_txt = f"{sign}{daily_pnl:,.0f}원\n{sign}{daily_pct:.2f}% / {target*100:.0f}%목표"
-        daily_color = "#66bb6a" if daily_pct >= target * 100 else _color(daily_pnl)
-        self.card_daily.set(daily_txt, daily_color)
+        total  = self.portfolio.total_value(current_prices)
+        profit = total - initial
+        pct    = profit / initial * 100 if initial else 0
+        cash   = self.portfolio.cash
+        n_pos  = self.portfolio.position_count()
 
-        # 보유 종목 갱신 (스캘핑/스윙 표시)
-        self.holdings_tree.delete(*self.holdings_tree.get_children())
-        for pos in self.portfolio.get_positions():
-            key = (pos["code"], pos["market"])
-            cur = prices.get(key, pos["avg_price"])
-            rate = (cur - pos["avg_price"]) / pos["avg_price"] * 100
-            sign = "+" if rate >= 0 else ""
-            mode_tag = "S" if pos.get("mode") == "scalp" else "W"
-            tag = "up" if rate >= 0 else "dn"
-            self.holdings_tree.insert("", "end", values=(
-                f"[{mode_tag}]{pos['name']}", f"{cur:,.0f}", f"{sign}{rate:.2f}%"
-            ), tags=(tag,))
-        self.holdings_tree.tag_configure("up", foreground="#ef5350")
-        self.holdings_tree.tag_configure("dn", foreground="#42a5f5")
+        p_color = "#66bb6a" if profit >= 0 else "#e57373"
+
+        self.card_total._val_label.configure(text=f"{total:,.0f}원")
+        self.card_profit._val_label.configure(
+            text=f"{profit:+,.0f}원", text_color=p_color)
+        self.card_pct._val_label.configure(
+            text=f"{pct:+.2f}%", text_color=p_color)
+        self.card_cash._val_label.configure(text=f"{cash:,.0f}원")
+        self.card_pos._val_label.configure(text=f"{n_pos}종목")
 
         # 차트 갱신
-        history = self.db.get_portfolio_history(288)
-        self.ax.clear()
-        self.ax.set_facecolor("#1e1e2e")
+        history = self.db.get_history(200)
         if len(history) >= 2:
-            init = self.portfolio.initial_capital
-            times = [datetime.strptime(h["timestamp"], "%Y-%m-%d %H:%M:%S") for h in history]
-            rates = [(h["total_value"] - init) / init * 100 for h in history]
-            color = "#ef5350" if rates[-1] >= 0 else "#42a5f5"
-            self.ax.plot(times, rates, color=color, linewidth=1.5)
-            self.ax.axhline(0, color="gray", linewidth=0.5, linestyle="--")
-            self.ax.fill_between(times, 0, rates, alpha=0.15, color=color)
-            self.ax.xaxis.set_major_formatter(mdates.DateFormatter("%m/%d %H:%M"))
-            self.fig.autofmt_xdate(rotation=30, ha="right")
-        self.ax.tick_params(colors="gray", labelsize=8)
-        self.ax.spines[:].set_color("#444")
-        self.ax.set_ylabel("수익률(%)", color="gray", fontsize=8, fontname="Malgun Gothic")
-        self.fig.tight_layout(pad=1.0)
-        self.canvas.draw()
-
-        # 최근 거래 갱신
-        self.recent_tree.delete(*self.recent_tree.get_children())
-        for t in self.db.get_trades(limit=10):
-            ts = t["timestamp"][11:16]
-            typ = "▲매수" if t["trade_type"] == "BUY" else "▼매도"
-            pft = ""
-            if t["profit"] is not None:
-                sign = "+" if t["profit"] >= 0 else ""
-                pft = f"{sign}{t['profit']:,.0f}({sign}{t['profit_rate']:.1f}%)"
-            tag = "buy" if t["trade_type"] == "BUY" else ("profit" if (t["profit"] or 0) >= 0 else "loss")
-            self.recent_tree.insert("", "end", values=(
-                ts, typ, t["name"], f"{t['price']:,.0f}", pft, t["reason"]
-            ), tags=(tag,))
-        self.recent_tree.tag_configure("buy", foreground="#29b6f6")
-        self.recent_tree.tag_configure("profit", foreground="#ef5350")
-        self.recent_tree.tag_configure("loss", foreground="#42a5f5")
+            xs = list(range(len(history)))
+            ys = [h["value"] for h in history]
+            self._ax.clear()
+            self._ax.set_facecolor("#13131f")
+            self._ax.tick_params(colors="#666", labelsize=8)
+            for spine in self._ax.spines.values():
+                spine.set_edgecolor("#333")
+            color = "#66bb6a" if ys[-1] >= ys[0] else "#e57373"
+            self._ax.plot(xs, ys, color=color, linewidth=1.5)
+            self._ax.fill_between(xs, ys, alpha=0.15, color=color)
+            self._ax.axhline(y=initial, color="#555", linestyle="--", linewidth=0.8)
+            self._fig.tight_layout(pad=0.8)
+            self._canvas.draw()

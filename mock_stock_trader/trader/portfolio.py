@@ -1,143 +1,142 @@
-from datetime import datetime
-from db.database import Database
+"""가상 포트폴리오 — 현금·포지션·손익 관리"""
 import config
+from db.database import Database
+from datetime import datetime
 
 
-class VirtualPortfolio:
-    def __init__(self, db: Database, initial_capital: float):
-        self.db = db
-        if not db.get_setting("cash"):
-            db.set_setting("cash", initial_capital)
-            db.set_setting("initial_capital", initial_capital)
+class Portfolio:
+    def __init__(self, db: Database):
+        self.db   = db
+        self._cash = float(db.get_setting("cash", config.DEFAULT_INITIAL_CAPITAL))
+        # {(code, market): {"name","quantity","avg_price","mode"}}
+        self._positions: dict = {}
+        self._load_positions()
+
+    # ── 초기화 ───────────────────────────────────────────────
+
+    def _load_positions(self):
+        for row in self.db.get_positions():
+            key = (row["code"], row["market"])
+            self._positions[key] = {
+                "name":      row["name"],
+                "quantity":  row["quantity"],
+                "avg_price": row["avg_price"],
+                "mode":      row.get("mode", "swing"),
+            }
+
+    def set_initial_capital(self, amount: float):
+        self._cash = amount
+        self._positions.clear()
+        self.db.set_setting("cash", amount)
+
+    # ── 현금 ─────────────────────────────────────────────────
 
     @property
     def cash(self) -> float:
-        return float(self.db.get_setting("cash", 0))
+        return self._cash
+
+    def _save_cash(self):
+        self.db.set_setting("cash", self._cash)
+
+    # ── 포지션 조회 ───────────────────────────────────────────
 
     @property
-    def initial_capital(self) -> float:
-        return float(self.db.get_setting("initial_capital", 0))
+    def positions(self) -> dict:
+        return self._positions
 
-    def set_initial_capital(self, amount: float):
-        self.db.set_setting("initial_capital", amount)
-        self.db.set_setting("cash", amount)
+    def has_position(self, code: str, market: str) -> bool:
+        return (code, market) in self._positions
 
-    def get_positions(self) -> list[dict]:
-        return self.db.get_portfolio()
+    def position_count(self) -> int:
+        return len(self._positions)
 
-    def count_positions(self) -> int:
-        return self.db.count_positions()
+    # ── 매수 ─────────────────────────────────────────────────
 
-    def get_position(self, code: str, market: str) -> dict | None:
-        return self.db.get_position(code, market)
+    def buy(self, code, market, name, price, quantity, mode="swing") -> dict | None:
+        fee_rate = config.KR_FEE_RATE if market == "KR" else config.US_FEE_RATE
+        amount   = price * quantity
+        fee      = amount * fee_rate
 
-    def buy(self, code: str, name: str, market: str, price: float, reason: str, mode: str = "swing") -> bool:
-        if self.count_positions() >= config.MAX_POSITIONS:
-            return False
+        if self._cash < amount + fee:
+            return None
 
-        cash = self.cash
-        # 복리 효과: 현재 보유 현금의 MAX_POSITION_RATIO% 사용
-        max_amount = cash * config.MAX_POSITION_RATIO
-        fee_rate = config.KR_BUY_FEE if market == "KR" else config.US_BUY_FEE
+        self._cash -= (amount + fee)
 
-        invest = min(max_amount, cash * 0.9)
-        gross = invest / (1 + fee_rate)
-        quantity = int(gross / price)
-        if quantity <= 0:
-            return False
-
-        amount = price * quantity
-        fee = amount * fee_rate
-        total_cost = amount + fee
-
-        if total_cost > cash:
-            return False
-
-        now = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-        existing = self.get_position(code, market)
-        if existing:
-            total_qty = existing["quantity"] + quantity
-            avg = (existing["avg_price"] * existing["quantity"] + price * quantity) / total_qty
-            self.db.upsert_position(code, name, market, total_qty, avg, existing["buy_date"], existing["buy_reason"], mode)
+        key = (code, market)
+        if key in self._positions:
+            pos = self._positions[key]
+            total_qty   = pos["quantity"] + quantity
+            total_cost  = pos["avg_price"] * pos["quantity"] + amount
+            pos["avg_price"] = total_cost / total_qty
+            pos["quantity"]  = total_qty
         else:
-            self.db.upsert_position(code, name, market, quantity, price, now, reason, mode)
+            self._positions[key] = {
+                "name":      name,
+                "quantity":  quantity,
+                "avg_price": price,
+                "mode":      mode,
+            }
 
-        self.db.set_setting("cash", cash - total_cost)
-        self.db.add_trade({
-            "timestamp": now,
-            "code": code,
-            "name": name,
-            "market": market,
-            "trade_type": "BUY",
-            "price": price,
-            "quantity": quantity,
-            "amount": amount,
-            "fee": fee,
-            "profit": None,
-            "profit_rate": None,
-            "reason": f"[{mode.upper()}] {reason}",
-        })
-        return True
+        self.db.upsert_position(
+            code, market, name,
+            self._positions[key]["quantity"],
+            self._positions[key]["avg_price"],
+            mode,
+        )
+        self._save_cash()
 
-    def sell(self, code: str, market: str, price: float, reason: str) -> bool:
-        pos = self.get_position(code, market)
-        if not pos:
-            return False
+        ts = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+        self.db.save_trade(
+            code, market, name, "BUY", price, quantity, amount, fee, 0, "매수", ts
+        )
 
+        return {"amount": amount, "fee": fee, "timestamp": ts}
+
+    # ── 매도 ─────────────────────────────────────────────────
+
+    def sell(self, code, market, price, reason="") -> dict | None:
+        key = (code, market)
+        if key not in self._positions:
+            return None
+
+        pos      = self._positions[key]
         quantity = pos["quantity"]
-        avg_price = pos["avg_price"]
-        name = pos["name"]
+        name     = pos["name"]
 
-        amount = price * quantity
-        if market == "KR":
-            fee_rate = config.KR_SELL_FEE
-        else:
-            fee_rate = config.US_SELL_FEE
+        fee_rate = config.KR_FEE_RATE if market == "KR" else config.US_FEE_RATE
+        amount   = price * quantity
+        fee      = amount * fee_rate
+        profit   = (price - pos["avg_price"]) * quantity - fee
 
-        fee = amount * fee_rate
-        net = amount - fee
-        profit = net - (avg_price * quantity)
-        profit_rate = profit / (avg_price * quantity) * 100
+        self._cash += amount - fee
+        del self._positions[key]
+        self.db.delete_position(code, market)
+        self._save_cash()
 
-        self.db.remove_position(code, market)
-        cash = self.cash
-        self.db.set_setting("cash", cash + net)
+        ts = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+        self.db.save_trade(
+            code, market, name, "SELL", price, quantity, amount, fee, profit, reason, ts
+        )
 
-        now = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-        self.db.add_trade({
-            "timestamp": now,
-            "code": code,
-            "name": name,
-            "market": market,
-            "trade_type": "SELL",
-            "price": price,
-            "quantity": quantity,
-            "amount": amount,
-            "fee": fee,
-            "profit": round(profit, 2),
-            "profit_rate": round(profit_rate, 2),
-            "reason": reason,
-        })
-        return True
+        return {"profit": profit, "amount": amount, "fee": fee, "timestamp": ts}
 
-    def get_total_value(self, prices: dict) -> float:
-        """prices: {(code, market): price}"""
-        total = self.cash
-        for pos in self.get_positions():
-            key = (pos["code"], pos["market"])
-            price = prices.get(key, pos["avg_price"])
-            total += price * pos["quantity"]
-        return total
+    # ── 평가 ─────────────────────────────────────────────────
 
-    def get_pnl(self, prices: dict) -> dict:
-        total = self.get_total_value(prices)
-        init = self.initial_capital
-        profit = total - init
-        rate = profit / init * 100 if init > 0 else 0
-        return {
-            "total_value": total,
-            "initial_capital": init,
-            "profit": profit,
-            "profit_rate": rate,
-            "cash": self.cash,
-        }
+    def total_value(self, current_prices: dict) -> float:
+        """현금 + 보유 종목 평가금액 합계"""
+        val = self._cash
+        for (code, market), pos in self._positions.items():
+            price = current_prices.get((code, market), pos["avg_price"])
+            val  += price * pos["quantity"]
+        return val
+
+    def unrealized_pnl(self, current_prices: dict) -> float:
+        pnl = 0.0
+        for (code, market), pos in self._positions.items():
+            price = current_prices.get((code, market), pos["avg_price"])
+            pnl  += (price - pos["avg_price"]) * pos["quantity"]
+        return pnl
+
+    def initial_capital(self) -> float:
+        return float(self.db.get_setting("initial_capital",
+                     self.db.get_setting("cash", config.DEFAULT_INITIAL_CAPITAL)))

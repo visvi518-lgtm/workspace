@@ -74,31 +74,26 @@ async def fetch_naver_health_articles(board_type: str) -> list[dict]:
 
 
 async def summarize_with_ai(title: str, content: str) -> tuple[str, list[str]]:
-    """Claude API로 기사를 요약하고 태그를 추출합니다."""
+    """Gemini API로 기사를 요약하고 태그를 추출합니다."""
     from app.core.config import settings
-    if not settings.ANTHROPIC_API_KEY:
+    if not settings.GEMINI_API_KEY:
         return content[:200], []
 
-    import anthropic
-    client = anthropic.Anthropic(api_key=settings.ANTHROPIC_API_KEY)
+    import json
+    import google.generativeai as genai
+    genai.configure(api_key=settings.GEMINI_API_KEY)
+    model = genai.GenerativeModel("gemini-1.5-flash")
 
     try:
-        res = client.messages.create(
-            model="claude-haiku-4-5-20251001",
-            max_tokens=512,
-            messages=[
-                {
-                    "role": "user",
-                    "content": (
-                        f"다음 건강 기사를 3문장으로 요약하고, 관련 태그를 최대 5개 추출해 주세요.\n\n"
-                        f"제목: {title}\n내용: {content[:1000]}\n\n"
-                        '형식 (JSON): {"summary": "요약문", "tags": ["태그1", "태그2"]}'
-                    ),
-                }
-            ],
+        prompt = (
+            f"다음 건강 기사를 3문장으로 요약하고, 관련 태그를 최대 5개 추출해 주세요.\n\n"
+            f"제목: {title}\n내용: {content[:1000]}\n\n"
+            '형식 (JSON): {"summary": "요약문", "tags": ["태그1", "태그2"]}\n'
+            "JSON만 출력하세요."
         )
-        import json
-        data = json.loads(res.content[0].text)
+        res = model.generate_content(prompt)
+        text = res.text.strip().strip("```json").strip("```").strip()
+        data = json.loads(text)
         return data.get("summary", content[:200]), data.get("tags", [])
     except Exception as e:
         logger.error(f"AI 요약 실패: {e}")

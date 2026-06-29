@@ -127,8 +127,8 @@ def send_message(
     current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db),
 ):
-    if not settings.ANTHROPIC_API_KEY:
-        raise HTTPException(status_code=503, detail="AI 서비스가 설정되지 않았습니다.")
+    if not settings.GEMINI_API_KEY:
+        raise HTTPException(status_code=503, detail="AI 서비스가 설정되지 않았습니다. .env에 GEMINI_API_KEY를 입력해 주세요.")
 
     session = db.get(ChatSession, session_id)
     if not session or session.user_id != current_user.id:
@@ -143,13 +143,12 @@ def send_message(
         session.title = data.content[:50]
         db.commit()
 
-    # Build conversation history
+    # Build conversation history (Gemini format)
     history = [
-        {"role": m.role, "content": m.content}
+        {"role": "model" if m.role == "assistant" else "user", "parts": [m.content]}
         for m in session.messages
         if m.id != user_msg.id
     ]
-    history.append({"role": "user", "content": data.content})
 
     # Find relevant papers
     papers = find_relevant_papers(data.content, db)
@@ -175,16 +174,16 @@ def send_message(
     if user_context or paper_context:
         system += "\n\n" + user_context + paper_context
 
-    import anthropic
-    client = anthropic.Anthropic(api_key=settings.ANTHROPIC_API_KEY)
-    response = client.messages.create(
-        model="claude-sonnet-4-6",
-        max_tokens=1024,
-        system=system,
-        messages=history,
+    import google.generativeai as genai
+    genai.configure(api_key=settings.GEMINI_API_KEY)
+    model = genai.GenerativeModel(
+        model_name="gemini-1.5-flash",
+        system_instruction=system,
     )
+    chat = model.start_chat(history=history)
+    response = chat.send_message(data.content)
 
-    ai_content = response.content[0].text
+    ai_content = response.text
     ai_msg = ChatMessage(
         session_id=session_id,
         role="assistant",

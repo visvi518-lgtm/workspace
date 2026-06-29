@@ -1,4 +1,5 @@
 import base64
+import calendar
 import io
 from datetime import date
 from typing import Optional
@@ -33,7 +34,10 @@ def get_exercise_logs(
 ):
     query = db.query(ExerciseLog).filter(ExerciseLog.user_id == current_user.id)
     if month:
-        query = query.filter(ExerciseLog.date.cast(str).like(f"{month}%"))
+        year, mon = map(int, month.split("-"))
+        start = date(year, mon, 1)
+        end = date(year, mon, calendar.monthrange(year, mon)[1])
+        query = query.filter(ExerciseLog.date >= start, ExerciseLog.date <= end)
     logs = query.order_by(ExerciseLog.date.desc()).all()
     return [
         {
@@ -100,7 +104,10 @@ def get_diet_logs(
 ):
     query = db.query(DietLog).filter(DietLog.user_id == current_user.id)
     if month:
-        query = query.filter(DietLog.date.cast(str).like(f"{month}%"))
+        year, mon = map(int, month.split("-"))
+        start = date(year, mon, 1)
+        end = date(year, mon, calendar.monthrange(year, mon)[1])
+        query = query.filter(DietLog.date >= start, DietLog.date <= end)
     logs = query.order_by(DietLog.date.desc()).all()
     return [
         {
@@ -199,16 +206,19 @@ def get_calendar_data(
     current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db),
 ):
+    year, mon = map(int, month.split("-"))
+    start = date(year, mon, 1)
+    end = date(year, mon, calendar.monthrange(year, mon)[1])
     ex_logs = (
         db.query(ExerciseLog)
         .filter(ExerciseLog.user_id == current_user.id)
-        .filter(ExerciseLog.date.cast(str).like(f"{month}%"))
+        .filter(ExerciseLog.date >= start, ExerciseLog.date <= end)
         .all()
     )
     diet_logs = (
         db.query(DietLog)
         .filter(DietLog.user_id == current_user.id)
-        .filter(DietLog.date.cast(str).like(f"{month}%"))
+        .filter(DietLog.date >= start, DietLog.date <= end)
         .all()
     )
     return {
@@ -224,43 +234,30 @@ async def analyze_calories(
     image: UploadFile = File(...),
     current_user: User = Depends(get_current_user),
 ):
-    if not settings.ANTHROPIC_API_KEY:
-        raise HTTPException(status_code=503, detail="AI 서비스가 설정되지 않았습니다.")
+    if not settings.GEMINI_API_KEY:
+        raise HTTPException(status_code=503, detail="AI 서비스가 설정되지 않았습니다. .env에 GEMINI_API_KEY를 입력해 주세요.")
 
     content = await image.read()
     if len(content) > 10 * 1024 * 1024:
         raise HTTPException(status_code=400, detail="파일 크기가 너무 큽니다. (최대 10MB)")
 
-    import anthropic
-
-    b64 = base64.standard_b64encode(content).decode("utf-8")
-    media_type = image.content_type or "image/jpeg"
-
-    client = anthropic.Anthropic(api_key=settings.ANTHROPIC_API_KEY)
-    response = client.messages.create(
-        model="claude-haiku-4-5-20251001",
-        max_tokens=256,
-        messages=[
-            {
-                "role": "user",
-                "content": [
-                    {"type": "image", "source": {"type": "base64", "media_type": media_type, "data": b64}},
-                    {
-                        "type": "text",
-                        "text": (
-                            "이 음식 사진을 보고 다음 형식으로만 답해주세요 (JSON):\n"
-                            '{"name": "음식 이름", "calories": 칼로리(숫자), "amount": "양 설명"}\n'
-                            "칼로리는 1인분 기준으로 추정하세요. JSON만 출력하세요."
-                        ),
-                    },
-                ],
-            }
-        ],
-    )
-
     import json
+    import google.generativeai as genai
+    from PIL import Image as PILImage
+
+    genai.configure(api_key=settings.GEMINI_API_KEY)
+    model = genai.GenerativeModel("gemini-1.5-flash")
+
+    img = PILImage.open(io.BytesIO(content))
+    prompt = (
+        "이 음식 사진을 보고 다음 JSON 형식으로만 답해주세요:\n"
+        '{"name": "음식 이름", "calories": 칼로리(숫자), "amount": "양 설명"}\n'
+        "칼로리는 1인분 기준으로 추정하세요. JSON만 출력하세요."
+    )
+    response = model.generate_content([prompt, img])
+
     try:
-        text = response.content[0].text.strip()
+        text = response.text.strip().strip("```json").strip("```").strip()
         data = json.loads(text)
         return {"name": data.get("name", "알 수 없음"), "calories": int(data.get("calories", 0)), "amount": data.get("amount", "")}
     except Exception:

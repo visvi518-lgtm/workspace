@@ -1,106 +1,88 @@
+"""거래 로그 탭"""
 import customtkinter as ctk
-from tkinter import ttk
-import tkinter as tk
 
 
 class LogTab(ctk.CTkFrame):
+
     def __init__(self, parent, db, auto_trader):
         super().__init__(parent, fg_color="transparent")
-        self.db = db
+        self.db          = db
         self.auto_trader = auto_trader
         self._build()
-
-    def _build(self):
-        style = ttk.Style()
-        style.configure("Log.Treeview",
-            background="#1e1e2e", foreground="white",
-            rowheight=28, fieldbackground="#1e1e2e", font=("Malgun Gothic", 10))
-        style.configure("Log.Treeview.Heading",
-            background="#2b2b2b", foreground="#aaa", font=("Malgun Gothic", 10, "bold"))
-        style.map("Log.Treeview", background=[("selected", "#3a3a5c")])
-
-        top = ctk.CTkFrame(self, fg_color="transparent")
-        top.pack(fill="x", padx=15, pady=(10, 5))
-        ctk.CTkLabel(top, text="거래 내역", font=("Malgun Gothic", 16, "bold")).pack(side="left")
-
-        cols = ("time", "market", "type", "name", "price", "qty", "amount", "fee", "profit", "rate", "reason")
-        hdrs = [
-            ("time", "시간", 130),
-            ("market", "시장", 50),
-            ("type", "구분", 55),
-            ("name", "종목", 110),
-            ("price", "단가", 90),
-            ("qty", "수량", 60),
-            ("amount", "거래금액", 110),
-            ("fee", "수수료", 80),
-            ("profit", "실현손익", 100),
-            ("rate", "수익률", 70),
-            ("reason", "매매 이유", 350),
-        ]
-
-        frame = ctk.CTkFrame(self, corner_radius=10, fg_color=("#2b2b2b", "#1e1e2e"))
-        frame.pack(fill="both", expand=True, padx=15, pady=5)
-
-        self.tree = ttk.Treeview(frame, style="Log.Treeview", show="headings", columns=cols)
-        for col, hdr, w in hdrs:
-            self.tree.heading(col, text=hdr, command=lambda c=col: self._sort(c))
-            self.tree.column(col, width=w, anchor="center")
-
-        vsb = ttk.Scrollbar(frame, orient="vertical", command=self.tree.yview)
-        hsb = ttk.Scrollbar(frame, orient="horizontal", command=self.tree.xview)
-        self.tree.configure(yscrollcommand=vsb.set, xscrollcommand=hsb.set)
-        vsb.pack(side="right", fill="y")
-        hsb.pack(side="bottom", fill="x")
-        self.tree.pack(fill="both", expand=True, padx=5, pady=5)
-
-        # 시스템 로그
-        log_frame = ctk.CTkFrame(self, corner_radius=10, fg_color=("#2b2b2b", "#1e1e2e"))
-        log_frame.pack(fill="x", padx=15, pady=(0, 10))
-        ctk.CTkLabel(log_frame, text="시스템 로그", font=("Malgun Gothic", 11, "bold")).pack(anchor="w", padx=10, pady=(6, 2))
-        self.log_text = ctk.CTkTextbox(log_frame, height=100, font=("Consolas", 10), fg_color="#111122")
-        self.log_text.pack(fill="x", padx=8, pady=(0, 8))
-
-        self._sort_col = "time"
-        self._sort_rev = True
-
-    def _sort(self, col):
-        self._sort_rev = not self._sort_rev if self._sort_col == col else False
-        self._sort_col = col
         self.update()
 
-    def update(self):
-        self.tree.delete(*self.tree.get_children())
-        trades = self.db.get_trades(limit=500)
+    def _build(self):
+        # 실시간 로그 박스
+        top = ctk.CTkFrame(self, corner_radius=10, fg_color=("#1e1e2e", "#13131f"))
+        top.pack(fill="x", padx=10, pady=(10, 4))
+        ctk.CTkLabel(top, text="실시간 로그",
+                     font=("Malgun Gothic", 12, "bold"), text_color="#aaa",
+                     ).pack(anchor="w", padx=12, pady=(8, 2))
+        self._live_box = ctk.CTkTextbox(
+            top, height=120, font=("Consolas", 11),
+            fg_color=("#111122", "#0a0a14"), state="disabled",
+        )
+        self._live_box.pack(fill="x", padx=12, pady=(0, 10))
 
-        for t in trades:
-            typ = "▲매수" if t["trade_type"] == "BUY" else "▼매도"
-            pft = ""
-            rate = ""
-            if t["profit"] is not None:
-                sign = "+" if t["profit"] >= 0 else ""
-                pft = f"{sign}{t['profit']:,.0f}"
-                rate = f"{sign}{t['profit_rate']:.2f}%"
-            tag = "buy" if t["trade_type"] == "BUY" else ("pos" if (t["profit"] or 0) >= 0 else "neg")
-            self.tree.insert("", "end", tags=(tag,), values=(
-                t["timestamp"],
-                t["market"],
-                typ,
-                t["name"],
-                f"{t['price']:,.0f}",
-                t["quantity"],
-                f"{t['amount']:,.0f}",
-                f"{t['fee']:,.0f}",
-                pft,
-                rate,
-                t["reason"],
-            ))
+        # 거래 이력 테이블
+        tbl = ctk.CTkFrame(self, corner_radius=10, fg_color=("#1e1e2e", "#13131f"))
+        tbl.pack(fill="both", expand=True, padx=10, pady=(0, 10))
+        ctk.CTkLabel(tbl, text="거래 이력",
+                     font=("Malgun Gothic", 12, "bold"), text_color="#aaa",
+                     ).pack(anchor="w", padx=12, pady=(8, 2))
 
-        self.tree.tag_configure("buy", foreground="#29b6f6")
-        self.tree.tag_configure("pos", foreground="#ef5350")
-        self.tree.tag_configure("neg", foreground="#42a5f5")
+        cols = [("시각", 140), ("종목", 120), ("구분", 50), ("시장", 50),
+                ("가격", 100), ("수량", 60), ("금액", 110), ("손익", 100), ("사유", 200)]
+        hdr = ctk.CTkFrame(tbl, fg_color=("#252535", "#161626"), height=28)
+        hdr.pack(fill="x", padx=12)
+        hdr.pack_propagate(False)
+        for label, w in cols:
+            ctk.CTkLabel(hdr, text=label, width=w,
+                         font=("Malgun Gothic", 10, "bold"),
+                         text_color="#90caf9", anchor="center").pack(side="left")
+
+        self._scroll = ctk.CTkScrollableFrame(
+            tbl, fg_color="transparent", scrollbar_button_color="#3a7bd5"
+        )
+        self._scroll.pack(fill="both", expand=True, padx=12, pady=(0, 8))
 
     def append_log(self, msg: str):
-        self.log_text.configure(state="normal")
-        self.log_text.insert("end", msg + "\n")
-        self.log_text.see("end")
-        self.log_text.configure(state="disabled")
+        self._live_box.configure(state="normal")
+        self._live_box.insert("end", msg + "\n")
+        self._live_box.see("end")
+        self._live_box.configure(state="disabled")
+
+    def update(self):
+        for w in self._scroll.winfo_children():
+            w.destroy()
+
+        trades = self.db.get_trades(100)
+        cols = [("시각", 140), ("종목", 120), ("구분", 50), ("시장", 50),
+                ("가격", 100), ("수량", 60), ("금액", 110), ("손익", 100), ("사유", 200)]
+
+        for i, t in enumerate(trades):
+            bg  = "#1e1e2e" if i % 2 == 0 else "#16162a"
+            row = ctk.CTkFrame(self._scroll, fg_color=bg, height=26)
+            row.pack(fill="x", pady=1)
+            row.pack_propagate(False)
+
+            is_buy  = t["trade_type"] == "BUY"
+            tc_color = "#64b5f6" if is_buy else "#ef9a9a"
+            pnl_color = "#66bb6a" if (t["profit"] or 0) >= 0 else "#e57373"
+
+            vals = [
+                (t["timestamp"] or "",          140, "#aaa"),
+                (t["name"] or "",               120, "#ddd"),
+                (t["trade_type"],                50, tc_color),
+                (t["market"] or "",              50, "#aaa"),
+                (f'{t["price"]:,.0f}',          100, "#ddd"),
+                (f'{t["quantity"]:.0f}',         60, "#ddd"),
+                (f'{t["amount"]:,.0f}',         110, "#ddd"),
+                (f'{t["profit"]:+,.0f}' if not is_buy else "—",
+                                                100, pnl_color),
+                (t["reason"] or "",             200, "#888"),
+            ]
+            for text, width, color in vals:
+                ctk.CTkLabel(row, text=text, width=width,
+                             font=("Malgun Gothic", 10),
+                             text_color=color, anchor="center").pack(side="left")
