@@ -4,8 +4,13 @@ import {
   Shield, Users, BarChart3, Ban, CheckCircle, Search,
   Database, RefreshCw, CheckSquare, XSquare, ExternalLink,
   Heart, Dumbbell, Tag, StopCircle,
+  Image as ImageIcon, Trash2, Eye, EyeOff, Plus,
 } from 'lucide-react';
 import { adminApi } from '@/services/api';
+
+const API_BASE = import.meta.env.VITE_API_URL
+  ? `${import.meta.env.VITE_API_URL}/api/v1`
+  : '/api/v1';
 import type { User, BanDuration } from '@/types';
 import { format } from 'date-fns';
 import toast from 'react-hot-toast';
@@ -18,7 +23,7 @@ const BAN_OPTIONS: { value: BanDuration; label: string }[] = [
   { value: 'permanent', label: '영구정지' },
 ];
 
-type MainTab = 'users' | 'content' | 'stats';
+type MainTab = 'users' | 'content' | 'stats' | 'banner';
 type ContentBoard = 'health' | 'exercise';
 type ContentStatus = 'draft' | 'published' | 'rejected';
 
@@ -43,11 +48,24 @@ export default function AdminPage() {
   const [banModal, setBanModal] = useState<{ userId: number; nickname: string } | null>(null);
   const [banForm, setBanForm] = useState({ duration: '3d' as BanDuration, reason: '' });
 
+  // ─── Banner tab state ───
+  const [addingBanner, setAddingBanner] = useState(false);
+  const [bannerTitle, setBannerTitle] = useState('');
+  const [bannerSubtitle, setBannerSubtitle] = useState('');
+  const [bannerImage, setBannerImage] = useState<File | null>(null);
+  const [bannerPreview, setBannerPreview] = useState<string | null>(null);
+
   // ─── Content tab state ───
   const [contentBoard, setContentBoard] = useState<ContentBoard>('health');
   const [contentStatus, setContentStatus] = useState<ContentStatus>('draft');
 
   // ─── Queries ───
+  const { data: adminBanners = [] } = useQuery<any[]>({
+    queryKey: ['adminBanners'],
+    queryFn: () => adminApi.getAdminBanners().then((r) => r.data),
+    enabled: tab === 'banner',
+  });
+
   const { data: userData } = useQuery({
     queryKey: ['adminUsers', page, search],
     queryFn: () => adminApi.getUsers({ page, search }).then((r) => r.data),
@@ -132,6 +150,43 @@ export default function AdminPage() {
     },
   });
 
+  const createBannerMutation = useMutation({
+    mutationFn: () => {
+      const fd = new FormData();
+      if (bannerTitle) fd.append('title', bannerTitle);
+      if (bannerSubtitle) fd.append('subtitle', bannerSubtitle);
+      if (bannerImage) fd.append('image', bannerImage);
+      return adminApi.createBanner(fd);
+    },
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ['adminBanners'] });
+      qc.invalidateQueries({ queryKey: ['banners'] });
+      setBannerTitle(''); setBannerSubtitle('');
+      setBannerImage(null); setBannerPreview(null);
+      setAddingBanner(false);
+      toast.success('배너가 추가되었습니다.');
+    },
+    onError: (err: any) => toast.error(err.response?.data?.detail || '추가에 실패했습니다.'),
+  });
+
+  const deleteBannerMutation = useMutation({
+    mutationFn: (id: number) => adminApi.deleteBanner(id),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ['adminBanners'] });
+      qc.invalidateQueries({ queryKey: ['banners'] });
+      toast.success('배너가 삭제되었습니다.');
+    },
+  });
+
+  const toggleBannerMutation = useMutation({
+    mutationFn: ({ id, is_active }: { id: number; is_active: boolean }) =>
+      adminApi.toggleBanner(id, is_active),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ['adminBanners'] });
+      qc.invalidateQueries({ queryKey: ['banners'] });
+    },
+  });
+
   const stopCrawlMutation = useMutation({
     mutationFn: () => adminApi.stopCrawl(),
     onSuccess: () => {
@@ -146,6 +201,7 @@ export default function AdminPage() {
     { id: 'users', label: '사용자 관리', Icon: Users },
     { id: 'content', label: '데이터 관리', Icon: Database },
     { id: 'stats', label: '통계', Icon: BarChart3 },
+    { id: 'banner', label: '배너 관리', Icon: ImageIcon },
   ];
 
   return (
@@ -402,6 +458,170 @@ export default function AdminPage() {
               <p className="text-3xl font-bold text-primary-600 mt-1">{s.value?.toLocaleString()}</p>
             </div>
           ))}
+        </div>
+      )}
+
+      {/* ─── Banner Tab ─── */}
+      {tab === 'banner' && (
+        <div className="space-y-4">
+          <div className="flex items-center justify-between">
+            <p className="text-sm text-gray-500">
+              최대 4개 등록 가능 · 3초 간격 우→좌 슬라이드
+            </p>
+            {adminBanners.length < 4 && !addingBanner && (
+              <button
+                onClick={() => setAddingBanner(true)}
+                className="btn-primary text-sm flex items-center gap-1.5"
+              >
+                <Plus className="w-4 h-4" /> 새 배너 추가
+              </button>
+            )}
+          </div>
+
+          {/* 추가 폼 */}
+          {addingBanner && (
+            <div className="card border border-primary-100 space-y-4">
+              <h3 className="font-semibold text-gray-900 text-sm">새 배너</h3>
+
+              {/* 이미지 업로드 */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">이미지</label>
+                <label className="block cursor-pointer">
+                  {bannerPreview ? (
+                    <div className="relative rounded-xl overflow-hidden h-36">
+                      <img src={bannerPreview} alt="preview" className="w-full h-full object-cover" />
+                      <div className="absolute inset-0 bg-black/30 flex items-center justify-center text-white text-xs">
+                        클릭하여 변경
+                      </div>
+                    </div>
+                  ) : (
+                    <div className="h-36 border-2 border-dashed border-gray-200 rounded-xl flex flex-col items-center justify-center text-gray-400 hover:border-primary-300 hover:text-primary-400 transition-colors">
+                      <ImageIcon className="w-8 h-8 mb-2" />
+                      <span className="text-sm">이미지 선택 (최대 5MB)</span>
+                    </div>
+                  )}
+                  <input
+                    type="file"
+                    accept="image/*"
+                    className="hidden"
+                    onChange={(e) => {
+                      const file = e.target.files?.[0];
+                      if (file) {
+                        setBannerImage(file);
+                        setBannerPreview(URL.createObjectURL(file));
+                      }
+                    }}
+                  />
+                </label>
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">제목</label>
+                <input
+                  type="text"
+                  value={bannerTitle}
+                  onChange={(e) => setBannerTitle(e.target.value)}
+                  placeholder="배너 제목 (선택)"
+                  className="input-base"
+                  maxLength={100}
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">부제목</label>
+                <input
+                  type="text"
+                  value={bannerSubtitle}
+                  onChange={(e) => setBannerSubtitle(e.target.value)}
+                  placeholder="배너 부제목 (선택)"
+                  className="input-base"
+                  maxLength={200}
+                />
+              </div>
+
+              <div className="flex gap-3">
+                <button
+                  onClick={() => {
+                    setAddingBanner(false);
+                    setBannerTitle(''); setBannerSubtitle('');
+                    setBannerImage(null); setBannerPreview(null);
+                  }}
+                  className="btn-secondary flex-1"
+                >
+                  취소
+                </button>
+                <button
+                  onClick={() => createBannerMutation.mutate()}
+                  disabled={createBannerMutation.isPending || (!bannerImage && !bannerTitle)}
+                  className="btn-primary flex-1"
+                >
+                  {createBannerMutation.isPending ? '저장 중...' : '저장'}
+                </button>
+              </div>
+            </div>
+          )}
+
+          {/* 배너 목록 */}
+          {adminBanners.length === 0 && !addingBanner ? (
+            <div className="card text-center py-12 text-gray-400">
+              <ImageIcon className="w-10 h-10 mx-auto mb-3 opacity-30" />
+              <p className="text-sm">등록된 배너가 없습니다.</p>
+              <p className="text-xs mt-1 text-gray-300">위 버튼으로 배너를 추가하세요.</p>
+            </div>
+          ) : (
+            <div className="space-y-3">
+              {adminBanners.map((banner: any) => (
+                <div key={banner.id} className="card border border-gray-100 flex items-center gap-4">
+                  {/* 썸네일 */}
+                  <div className="w-24 h-16 rounded-lg overflow-hidden bg-gray-100 flex-shrink-0">
+                    {banner.has_image ? (
+                      <img
+                        src={`${API_BASE}/banners/${banner.id}/image`}
+                        alt={banner.title ?? '배너'}
+                        className="w-full h-full object-cover"
+                      />
+                    ) : (
+                      <div className="w-full h-full bg-gradient-to-br from-primary-200 to-primary-100 flex items-center justify-center">
+                        <ImageIcon className="w-5 h-5 text-primary-400" />
+                      </div>
+                    )}
+                  </div>
+
+                  {/* 텍스트 */}
+                  <div className="flex-1 min-w-0">
+                    <p className="font-medium text-sm text-gray-900 truncate">
+                      {banner.title || <span className="text-gray-400">제목 없음</span>}
+                    </p>
+                    {banner.subtitle && (
+                      <p className="text-xs text-gray-500 truncate mt-0.5">{banner.subtitle}</p>
+                    )}
+                    <p className="text-xs text-gray-400 mt-1">순서 {banner.order_idx + 1}</p>
+                  </div>
+
+                  {/* 액션 */}
+                  <div className="flex items-center gap-2 flex-shrink-0">
+                    <button
+                      onClick={() => toggleBannerMutation.mutate({ id: banner.id, is_active: !banner.is_active })}
+                      className={`flex items-center gap-1 text-xs px-2 py-1.5 rounded-lg font-medium transition-colors ${
+                        banner.is_active
+                          ? 'bg-green-50 text-green-700 hover:bg-green-100'
+                          : 'bg-gray-100 text-gray-500 hover:bg-gray-200'
+                      }`}
+                    >
+                      {banner.is_active ? <Eye className="w-3.5 h-3.5" /> : <EyeOff className="w-3.5 h-3.5" />}
+                      {banner.is_active ? '활성' : '숨김'}
+                    </button>
+                    <button
+                      onClick={() => deleteBannerMutation.mutate(banner.id)}
+                      disabled={deleteBannerMutation.isPending}
+                      className="flex items-center gap-1 text-xs px-2 py-1.5 rounded-lg bg-red-50 text-red-600 hover:bg-red-100 font-medium transition-colors"
+                    >
+                      <Trash2 className="w-3.5 h-3.5" /> 삭제
+                    </button>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
         </div>
       )}
 

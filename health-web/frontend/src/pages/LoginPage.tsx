@@ -5,6 +5,8 @@ import { authApi } from '@/services/api';
 import { useAuthStore } from '@/store/authStore';
 import toast from 'react-hot-toast';
 
+const BACKEND = import.meta.env.VITE_API_URL ?? '';
+
 export default function LoginPage() {
   const [form, setForm] = useState({ email: '', password: '' });
   const [showPw, setShowPw] = useState(false);
@@ -97,7 +99,7 @@ export default function LoginPage() {
 
           <div className="space-y-3">
             <a
-              href="/api/v1/auth/google"
+              href={`${BACKEND}/api/v1/auth/google`}
               className="flex items-center justify-center gap-3 w-full py-2.5 px-4 border border-gray-300 rounded-lg text-sm font-medium text-gray-700 hover:bg-gray-50 transition-colors"
             >
               <svg viewBox="0 0 24 24" className="w-5 h-5">
@@ -110,7 +112,7 @@ export default function LoginPage() {
             </a>
 
             <a
-              href="/api/v1/auth/naver"
+              href={`${BACKEND}/api/v1/auth/naver`}
               className="flex items-center justify-center gap-3 w-full py-2.5 px-4 bg-[#03C75A] text-white rounded-lg text-sm font-medium hover:bg-[#02b350] transition-colors"
             >
               <span className="w-5 h-5 flex items-center justify-center bg-white rounded-sm text-[#03C75A] font-extrabold text-base leading-none">N</span>

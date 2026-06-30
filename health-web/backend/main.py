@@ -7,7 +7,7 @@ from fastapi.middleware.cors import CORSMiddleware
 
 from sqlalchemy import text
 
-from app.api.routes import auth, board, health, chat, admin
+from app.api.routes import auth, board, health, chat, admin, banner
 from app.core.config import settings
 from app.core.database import Base, engine
 
@@ -64,6 +64,7 @@ app.include_router(board.router, prefix="/api/v1")
 app.include_router(health.router, prefix="/api/v1")
 app.include_router(chat.router, prefix="/api/v1")
 app.include_router(admin.router, prefix="/api/v1")
+app.include_router(banner.router, prefix="/api/v1")
 
 
 @app.get("/api/v1/health-check")

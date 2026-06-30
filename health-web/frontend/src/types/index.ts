@@ -20,7 +20,7 @@ export interface UserProfile {
   medical_history?: string;
   medications?: string;
   exercise_habits?: string;
-  nationality: 'korean' | 'foreign';
+  nationality?: 'korean' | 'foreign';
   exercise_purpose?: 'posture' | 'strength' | 'weight_management';
   diet_purpose?: 'loss' | 'gain' | 'maintain' | 'medical';
 }
@@ -131,6 +131,16 @@ export interface PaginatedResponse<T> {
 
 export interface ApiError {
   detail: string;
+}
+
+// ────────────── Banner ──────────────
+export interface Banner {
+  id: number;
+  title?: string;
+  subtitle?: string;
+  has_image: boolean;
+  order_idx?: number;
+  is_active?: boolean;
 }
 
 // ────────────── Admin ──────────────

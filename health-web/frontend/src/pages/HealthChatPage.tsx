@@ -1,6 +1,6 @@
 import { useState, useRef, useEffect } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { Send, Plus, MessageSquare, Bot, User, BookOpen, Trash2 } from 'lucide-react';
+import { Send, Plus, MessageSquare, Bot, User, BookOpen, Trash2, Menu, X } from 'lucide-react';
 import { chatApi } from '@/services/api';
 import type { ChatSession, ChatMessage } from '@/types';
 import { format } from 'date-fns';
@@ -10,6 +10,7 @@ export default function HealthChatPage() {
   const qc = useQueryClient();
   const [selectedSession, setSelectedSession] = useState<number | null>(null);
   const [input, setInput] = useState('');
+  const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false);
   const bottomRef = useRef<HTMLDivElement>(null);
 
   const { data: sessions = [] } = useQuery<ChatSession[]>({
@@ -58,10 +59,37 @@ export default function HealthChatPage() {
     sendMessage.mutate();
   };
 
+  const sessionList = (
+    <>
+      {sessions.length === 0 && (
+        <p className="text-xs text-gray-400 text-center py-4">상담 내역이 없습니다.</p>
+      )}
+      {sessions.map((s) => (
+        <div
+          key={s.id}
+          className={`group flex items-center justify-between px-3 py-2 rounded-lg cursor-pointer transition-colors text-sm
+            ${selectedSession === s.id ? 'bg-primary-100 text-primary-700' : 'hover:bg-gray-100 text-gray-700'}`}
+          onClick={() => { setSelectedSession(s.id); setMobileSidebarOpen(false); }}
+        >
+          <div className="flex items-center gap-2 min-w-0">
+            <MessageSquare className="w-3.5 h-3.5 flex-shrink-0" />
+            <span className="truncate">{s.title}</span>
+          </div>
+          <button
+            onClick={(e) => { e.stopPropagation(); deleteSession.mutate(s.id); }}
+            className="opacity-0 group-hover:opacity-100 text-gray-400 hover:text-red-500 transition-opacity"
+          >
+            <Trash2 className="w-3.5 h-3.5" />
+          </button>
+        </div>
+      ))}
+    </>
+  );
+
   return (
     <div className="flex h-[calc(100vh-9rem)] gap-4">
-      {/* Sidebar */}
-      <div className="w-64 flex-shrink-0 flex flex-col gap-2">
+      {/* Desktop Sidebar */}
+      <div className="hidden sm:flex w-64 flex-shrink-0 flex-col gap-2">
         <button
           onClick={() => createSession.mutate()}
           className="btn-primary flex items-center gap-2 w-full justify-center"
@@ -71,33 +99,54 @@ export default function HealthChatPage() {
 
         <div className="card flex-1 overflow-y-auto p-2 space-y-1">
           <p className="text-xs font-medium text-gray-400 px-2 py-1">상담 내역</p>
-          {sessions.length === 0 && (
-            <p className="text-xs text-gray-400 text-center py-4">상담 내역이 없습니다.</p>
-          )}
-          {sessions.map((s) => (
-            <div
-              key={s.id}
-              className={`group flex items-center justify-between px-3 py-2 rounded-lg cursor-pointer transition-colors text-sm
-                ${selectedSession === s.id ? 'bg-primary-100 text-primary-700' : 'hover:bg-gray-100 text-gray-700'}`}
-              onClick={() => setSelectedSession(s.id)}
-            >
-              <div className="flex items-center gap-2 min-w-0">
-                <MessageSquare className="w-3.5 h-3.5 flex-shrink-0" />
-                <span className="truncate">{s.title}</span>
-              </div>
-              <button
-                onClick={(e) => { e.stopPropagation(); deleteSession.mutate(s.id); }}
-                className="opacity-0 group-hover:opacity-100 text-gray-400 hover:text-red-500 transition-opacity"
-              >
-                <Trash2 className="w-3.5 h-3.5" />
-              </button>
-            </div>
-          ))}
+          {sessionList}
         </div>
       </div>
 
-      {/* Chat area */}
-      <div className="flex-1 flex flex-col card p-0 overflow-hidden">
+      {/* Mobile Sidebar Overlay */}
+      {mobileSidebarOpen && (
+        <div className="fixed inset-0 z-40 sm:hidden">
+          <div className="absolute inset-0 bg-black/40" onClick={() => setMobileSidebarOpen(false)} />
+          <div className="absolute top-0 left-0 bottom-0 w-72 bg-white shadow-xl flex flex-col p-4 gap-3">
+            <div className="flex items-center justify-between">
+              <span className="font-semibold text-gray-900 text-sm">상담 내역</span>
+              <button
+                onClick={() => setMobileSidebarOpen(false)}
+                className="p-1 text-gray-400 hover:text-gray-600 rounded"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+            <button
+              onClick={() => { createSession.mutate(); setMobileSidebarOpen(false); }}
+              className="btn-primary flex items-center gap-2 w-full justify-center"
+            >
+              <Plus className="w-4 h-4" /> 새 상담
+            </button>
+            <div className="flex-1 overflow-y-auto space-y-1">
+              {sessionList}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Chat area - full width on mobile */}
+      <div className="flex-1 flex flex-col card p-0 overflow-hidden min-w-0">
+        {/* Mobile top bar */}
+        <div className="sm:hidden flex items-center gap-2 px-4 py-2.5 border-b border-gray-100">
+          <button
+            onClick={() => setMobileSidebarOpen(true)}
+            className="flex items-center gap-1.5 text-sm text-gray-600 hover:text-primary-600 transition-colors"
+          >
+            <Menu className="w-4 h-4" /> 상담 내역
+          </button>
+          {selectedSession && (
+            <span className="ml-auto text-xs text-gray-400 truncate max-w-[180px]">
+              {sessions.find((s) => s.id === selectedSession)?.title}
+            </span>
+          )}
+        </div>
+
         {!selectedSession ? (
           <div className="flex-1 flex flex-col items-center justify-center text-center p-8 text-gray-400 gap-4">
             <Bot className="w-16 h-16 text-primary-200" />
