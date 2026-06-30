@@ -138,6 +138,7 @@ export interface Banner {
   id: number;
   title?: string;
   subtitle?: string;
+  link_url?: string;
   has_image: boolean;
   order_idx?: number;
   is_active?: boolean;

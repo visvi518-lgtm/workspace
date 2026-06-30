@@ -21,14 +21,17 @@ async def lifespan(app: FastAPI):
     # Create tables
     Base.metadata.create_all(bind=engine)
 
-    # SQLite column migration (기존 DB에 신규 컬럼 추가)
+    # 신규 컬럼 마이그레이션 (이미 존재하면 무시)
     with engine.connect() as conn:
-        try:
-            conn.execute(text("ALTER TABLE posts ADD COLUMN crawl_status VARCHAR(20)"))
-            conn.commit()
-            logging.getLogger(__name__).info("Migration: posts.crawl_status 컬럼 추가")
-        except Exception:
-            pass  # 이미 존재하는 경우 무시
+        for stmt in [
+            "ALTER TABLE posts ADD COLUMN crawl_status VARCHAR(20)",
+            "ALTER TABLE banners ADD COLUMN link_url VARCHAR(500)",
+        ]:
+            try:
+                conn.execute(text(stmt))
+                conn.commit()
+            except Exception:
+                pass
 
     # Setup schedules
     from app.services.crawler import crawl_health, crawl_exercise

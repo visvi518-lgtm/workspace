@@ -54,6 +54,7 @@ def admin_get_banners(
 async def admin_create_banner(
     title: Optional[str] = Form(None),
     subtitle: Optional[str] = Form(None),
+    link_url: Optional[str] = Form(None),
     image: Optional[UploadFile] = File(None),
     db: Session = Depends(get_db),
     _: User = Depends(get_admin_user),
@@ -73,6 +74,7 @@ async def admin_create_banner(
     banner = Banner(
         title=title or None,
         subtitle=subtitle or None,
+        link_url=link_url or None,
         image_data=image_data,
         image_type=image_type,
         order_idx=count,
@@ -127,6 +129,7 @@ def _to_dict(b: Banner) -> dict:
         "id": b.id,
         "title": b.title,
         "subtitle": b.subtitle,
+        "link_url": b.link_url,
         "has_image": bool(b.image_data),
     }
 
@@ -136,6 +139,7 @@ def _to_dict_admin(b: Banner) -> dict:
         "id": b.id,
         "title": b.title,
         "subtitle": b.subtitle,
+        "link_url": b.link_url,
         "has_image": bool(b.image_data),
         "order_idx": b.order_idx,
         "is_active": b.is_active,

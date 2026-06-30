@@ -13,6 +13,7 @@ class Banner(Base):
     subtitle = Column(String(500), nullable=True)
     image_data = Column(Text, nullable=True)
     image_type = Column(String(50), nullable=True)
+    link_url = Column(String(500), nullable=True)
     order_idx = Column(Integer, default=0)
     is_active = Column(Boolean, default=True)
     created_at = Column(

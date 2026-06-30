@@ -6,6 +6,7 @@ interface BannerMeta {
   id: number;
   title?: string;
   subtitle?: string;
+  link_url?: string;
   has_image: boolean;
 }
 
@@ -27,7 +28,7 @@ export default function BannerCarousel() {
     if (total <= 1) return;
     timerRef.current = setInterval(
       () => setCurrent((c) => (c + 1) % total),
-      3000
+      5000
     );
     return () => clearInterval(timerRef.current);
   }, [total]);
@@ -49,40 +50,59 @@ export default function BannerCarousel() {
           transform: `translateX(-${current * (100 / total)}%)`,
         }}
       >
-        {banners.map((banner) => (
-          <div
-            key={banner.id}
-            className="h-full relative flex-shrink-0"
-            style={{ width: `${100 / total}%` }}
-          >
-            {banner.has_image ? (
-              <img
-                src={`${API_BASE}/banners/${banner.id}/image`}
-                alt={banner.title ?? '배너'}
-                className="w-full h-full object-cover"
-              />
-            ) : (
-              <div className="w-full h-full bg-gradient-to-br from-primary-700 to-primary-500" />
-            )}
+        {banners.map((banner) => {
+          const inner = (
+            <>
+              {banner.has_image ? (
+                <img
+                  src={`${API_BASE}/banners/${banner.id}/image`}
+                  alt={banner.title ?? '배너'}
+                  className="w-full h-full object-cover"
+                />
+              ) : (
+                <div className="w-full h-full bg-gradient-to-br from-primary-700 to-primary-500" />
+              )}
 
-            {(banner.title || banner.subtitle) && (
-              <div className="absolute inset-0 bg-gradient-to-r from-black/60 via-black/20 to-transparent flex items-center px-8 sm:px-12">
-                <div className="text-white max-w-lg">
-                  {banner.title && (
-                    <h2 className="text-xl sm:text-3xl font-bold leading-tight mb-1.5">
-                      {banner.title}
-                    </h2>
-                  )}
-                  {banner.subtitle && (
-                    <p className="text-sm sm:text-base text-white/80 leading-relaxed">
-                      {banner.subtitle}
-                    </p>
-                  )}
+              {(banner.title || banner.subtitle) && (
+                <div className="absolute inset-0 bg-gradient-to-r from-black/60 via-black/20 to-transparent flex items-center px-8 sm:px-12">
+                  <div className="text-white max-w-lg">
+                    {banner.title && (
+                      <h2 className="text-xl sm:text-3xl font-bold leading-tight mb-1.5">
+                        {banner.title}
+                      </h2>
+                    )}
+                    {banner.subtitle && (
+                      <p className="text-sm sm:text-base text-white/80 leading-relaxed">
+                        {banner.subtitle}
+                      </p>
+                    )}
+                  </div>
                 </div>
-              </div>
-            )}
-          </div>
-        ))}
+              )}
+            </>
+          );
+
+          return banner.link_url ? (
+            <a
+              key={banner.id}
+              href={banner.link_url}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="h-full relative flex-shrink-0 block"
+              style={{ width: `${100 / total}%` }}
+            >
+              {inner}
+            </a>
+          ) : (
+            <div
+              key={banner.id}
+              className="h-full relative flex-shrink-0"
+              style={{ width: `${100 / total}%` }}
+            >
+              {inner}
+            </div>
+          );
+        })}
       </div>
 
       {/* Dot navigation */}

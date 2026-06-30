@@ -52,6 +52,7 @@ export default function AdminPage() {
   const [addingBanner, setAddingBanner] = useState(false);
   const [bannerTitle, setBannerTitle] = useState('');
   const [bannerSubtitle, setBannerSubtitle] = useState('');
+  const [bannerLinkUrl, setBannerLinkUrl] = useState('');
   const [bannerImage, setBannerImage] = useState<File | null>(null);
   const [bannerPreview, setBannerPreview] = useState<string | null>(null);
 
@@ -155,13 +156,14 @@ export default function AdminPage() {
       const fd = new FormData();
       if (bannerTitle) fd.append('title', bannerTitle);
       if (bannerSubtitle) fd.append('subtitle', bannerSubtitle);
+      if (bannerLinkUrl) fd.append('link_url', bannerLinkUrl);
       if (bannerImage) fd.append('image', bannerImage);
       return adminApi.createBanner(fd);
     },
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ['adminBanners'] });
       qc.invalidateQueries({ queryKey: ['banners'] });
-      setBannerTitle(''); setBannerSubtitle('');
+      setBannerTitle(''); setBannerSubtitle(''); setBannerLinkUrl('');
       setBannerImage(null); setBannerPreview(null);
       setAddingBanner(false);
       toast.success('배너가 추가되었습니다.');
@@ -537,12 +539,22 @@ export default function AdminPage() {
                   maxLength={200}
                 />
               </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">링크 URL</label>
+                <input
+                  type="url"
+                  value={bannerLinkUrl}
+                  onChange={(e) => setBannerLinkUrl(e.target.value)}
+                  placeholder="https://example.com (클릭 시 이동, 선택)"
+                  className="input-base"
+                />
+              </div>
 
               <div className="flex gap-3">
                 <button
                   onClick={() => {
                     setAddingBanner(false);
-                    setBannerTitle(''); setBannerSubtitle('');
+                    setBannerTitle(''); setBannerSubtitle(''); setBannerLinkUrl('');
                     setBannerImage(null); setBannerPreview(null);
                   }}
                   className="btn-secondary flex-1"
@@ -593,6 +605,17 @@ export default function AdminPage() {
                     </p>
                     {banner.subtitle && (
                       <p className="text-xs text-gray-500 truncate mt-0.5">{banner.subtitle}</p>
+                    )}
+                    {banner.link_url && (
+                      <a
+                        href={banner.link_url}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="text-xs text-primary-500 hover:underline truncate mt-0.5 flex items-center gap-1"
+                      >
+                        <ExternalLink className="w-3 h-3 flex-shrink-0" />
+                        {banner.link_url}
+                      </a>
                     )}
                     <p className="text-xs text-gray-400 mt-1">순서 {banner.order_idx + 1}</p>
                   </div>
