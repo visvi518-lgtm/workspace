@@ -2,7 +2,7 @@ from pydantic_settings import BaseSettings
 
 
 class Settings(BaseSettings):
-    APP_NAME: str = "닥터노트AI"
+    APP_NAME: str = "MOTI"
     DATABASE_URL: str = "postgresql://postgres:password@localhost:5432/healthweb"
     SECRET_KEY: str = "change-this-secret-key"
     ALGORITHM: str = "HS256"

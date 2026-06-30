@@ -7,7 +7,7 @@ export default function Footer() {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <div className="flex flex-col md:flex-row items-center justify-between gap-4">
           <Link to="/">
-            <img src={logoUrl} alt="닥터노트AI" className="h-24 w-auto" />
+            <img src={logoUrl} alt="MOTI" className="h-24 w-auto" />
           </Link>
           <p className="text-sm text-gray-500">
             본 서비스의 건강 상담은 참고용이며, 의료 진단을 대체하지 않습니다.
@@ -18,7 +18,7 @@ export default function Footer() {
           </div>
         </div>
         <p className="text-center text-xs text-gray-400 mt-6">
-          © 2025 닥터노트AI. All rights reserved.
+          © 2025 MOTI. All rights reserved.
         </p>
       </div>
     </footer>

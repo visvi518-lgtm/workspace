@@ -66,7 +66,7 @@ export default function HomePage() {
           </div>
           <h1 className="text-4xl sm:text-5xl font-bold leading-tight mb-4">
             건강한 삶,<br />
-            <span className="text-primary-200">닥터노트AI</span>와 함께
+            <span className="text-primary-200">MOTI</span>와 함께
           </h1>
           <p className="text-primary-100 text-lg mb-8 leading-relaxed">
             전문 의료 논문 기반 AI 건강 상담과<br className="hidden sm:block" />

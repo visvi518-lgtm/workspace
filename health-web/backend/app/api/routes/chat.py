@@ -10,7 +10,7 @@ from app.models.user import User
 
 router = APIRouter(prefix="/chat", tags=["chat"])
 
-SYSTEM_PROMPT = """당신은 닥터노트AI 서비스의 건강 상담 AI입니다.
+SYSTEM_PROMPT = """당신은 MOTI 서비스의 건강 상담 AI입니다.
 
 역할 및 원칙:
 1. 인용 수가 많은 의료 논문(미국/한국)을 바탕으로만 답변합니다.

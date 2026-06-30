@@ -47,7 +47,7 @@ export default function Header() {
                 <Menu className="w-5 h-5" />
               </button>
               <Link to="/">
-                <img src={logoUrl} alt="닥터노트AI" className="h-28 w-auto" />
+                <img src={logoUrl} alt="MOTI" className="h-28 w-auto" />
               </Link>
             </div>
 
@@ -126,7 +126,7 @@ export default function Header() {
         {/* Sidebar header */}
         <div className="flex items-center justify-between px-5 h-16 border-b border-gray-100">
           <Link to="/" onClick={() => setSidebarOpen(false)}>
-            <img src={logoUrl} alt="닥터노트AI" className="h-24 w-auto" />
+            <img src={logoUrl} alt="MOTI" className="h-24 w-auto" />
           </Link>
           <button
             onClick={() => setSidebarOpen(false)}
