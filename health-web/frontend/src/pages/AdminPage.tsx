@@ -4,9 +4,10 @@ import {
   Shield, Users, BarChart3, Ban, CheckCircle, Search,
   Database, RefreshCw, CheckSquare, XSquare, ExternalLink,
   Heart, Dumbbell, Tag, StopCircle,
-  Image as ImageIcon, Trash2, Eye, EyeOff, Plus,
+  Image as ImageIcon, Trash2, Eye, EyeOff, Plus, Salad,
 } from 'lucide-react';
 import { adminApi } from '@/services/api';
+import RecommendationAdmin from '@/components/admin/RecommendationAdmin';
 
 const API_BASE = import.meta.env.VITE_API_URL
   ? `${import.meta.env.VITE_API_URL}/api/v1`
@@ -23,7 +24,7 @@ const BAN_OPTIONS: { value: BanDuration; label: string }[] = [
   { value: 'permanent', label: '영구정지' },
 ];
 
-type MainTab = 'users' | 'content' | 'stats' | 'banner';
+type MainTab = 'users' | 'content' | 'stats' | 'banner' | 'recommendation';
 type ContentBoard = 'health' | 'exercise';
 type ContentStatus = 'draft' | 'published' | 'rejected';
 
@@ -204,6 +205,7 @@ export default function AdminPage() {
     { id: 'content', label: '데이터 관리', Icon: Database },
     { id: 'stats', label: '통계', Icon: BarChart3 },
     { id: 'banner', label: '배너 관리', Icon: ImageIcon },
+    { id: 'recommendation', label: '추천 관리', Icon: Salad },
   ];
 
   return (
@@ -647,6 +649,9 @@ export default function AdminPage() {
           )}
         </div>
       )}
+
+      {/* ─── Recommendation Tab ─── */}
+      {tab === 'recommendation' && <RecommendationAdmin />}
 
       {/* ─── Ban Modal ─── */}
       {banModal && (

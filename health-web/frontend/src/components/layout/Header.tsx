@@ -3,12 +3,13 @@ import logoUrl from '../../assets/logo.png';
 import { Link, NavLink, useNavigate } from 'react-router-dom';
 import {
   Menu, X, User, LogOut, Settings, Shield,
-  Activity, MessageCircle, Newspaper, Dumbbell, MessageSquare, ChevronRight,
+  Activity, MessageCircle, Newspaper, Dumbbell, MessageSquare, ChevronRight, Salad,
 } from 'lucide-react';
 import { useAuthStore } from '@/store/authStore';
 
 const NAV_ITEMS = [
-  { to: '/health',         label: '운동 및 식단 기록', Icon: Activity,       authRequired: true  },
+  { to: '/health',          label: '운동 및 식단 기록', Icon: Activity,       authRequired: true  },
+  { to: '/recommendation', label: '맞춤 추천',          Icon: Salad,          authRequired: true  },
   { to: '/chat',           label: 'AI 상담',           Icon: MessageCircle,  authRequired: true  },
   { to: '/board/health',   label: '건강정보',           Icon: Newspaper,      authRequired: false },
   { to: '/board/exercise', label: '운동정보',           Icon: Dumbbell,       authRequired: false },
@@ -47,7 +48,7 @@ export default function Header() {
                 <Menu className="w-5 h-5" />
               </button>
               <Link to="/">
-                <img src={logoUrl} alt="모티AI" className="h-28 w-auto" />
+                <img src={logoUrl} alt="모티AI" className="h-[95px] w-auto" />
               </Link>
             </div>
 
@@ -126,7 +127,7 @@ export default function Header() {
         {/* Sidebar header */}
         <div className="flex items-center justify-between px-5 h-16 border-b border-gray-100">
           <Link to="/" onClick={() => setSidebarOpen(false)}>
-            <img src={logoUrl} alt="모티AI" className="h-24 w-auto" />
+            <img src={logoUrl} alt="모티AI" className="h-[95px] w-auto" />
           </Link>
           <button
             onClick={() => setSidebarOpen(false)}

@@ -113,6 +113,16 @@ export const bannerApi = {
   getBanners: () => api.get('/banners/'),
 };
 
+// ─── Recommendations ───
+export const recommendationApi = {
+  getExercise: (purpose?: string) =>
+    api.get('/recommendations/exercise', { params: purpose ? { purpose } : {} }),
+  getDiet: (purpose?: string) =>
+    api.get('/recommendations/diet', { params: purpose ? { purpose } : {} }),
+  getExerciseCalories: (category?: string) =>
+    api.get('/exercise-calories', { params: category ? { category } : {} }),
+};
+
 // ─── Admin ───
 export const adminApi = {
   getUsers: (params?: { page?: number; search?: string }) =>
@@ -131,6 +141,28 @@ export const adminApi = {
   triggerCrawl: (boardType: 'health' | 'exercise') => api.post(`/admin/crawl/${boardType}`),
   getCrawlStatus: () => api.get('/admin/crawl/status'),
   stopCrawl: () => api.post('/admin/crawl/stop'),
+  // 추천
+  getAdminExercise: () => api.get('/admin/recommendations/exercise'),
+  createExercise: (data: object) => api.post('/admin/recommendations/exercise', data),
+  updateExercise: (id: number, data: object) => api.put(`/admin/recommendations/exercise/${id}`, data),
+  toggleExercise: (id: number, is_active: boolean) =>
+    api.patch(`/admin/recommendations/exercise/${id}`, { is_active }),
+  deleteExercise: (id: number) => api.delete(`/admin/recommendations/exercise/${id}`),
+  getAdminDiet: () => api.get('/admin/recommendations/diet'),
+  createDiet: (data: object) => api.post('/admin/recommendations/diet', data),
+  updateDiet: (id: number, data: object) => api.put(`/admin/recommendations/diet/${id}`, data),
+  toggleDiet: (id: number, is_active: boolean) =>
+    api.patch(`/admin/recommendations/diet/${id}`, { is_active }),
+  deleteDiet: (id: number) => api.delete(`/admin/recommendations/diet/${id}`),
+  seedRecommendations: () => api.post('/admin/recommendations/seed'),
+  // 칼로리 데이터
+  getAdminExerciseCalories: () => api.get('/admin/exercise-calories'),
+  createExerciseCalorie: (data: object) => api.post('/admin/exercise-calories', data),
+  updateExerciseCalorie: (id: number, data: object) => api.put(`/admin/exercise-calories/${id}`, data),
+  toggleExerciseCalorie: (id: number, is_active: boolean) =>
+    api.patch(`/admin/exercise-calories/${id}`, { is_active }),
+  deleteExerciseCalorie: (id: number) => api.delete(`/admin/exercise-calories/${id}`),
+  seedExerciseCalories: () => api.post('/admin/exercise-calories/seed'),
   // 배너
   getAdminBanners: () => api.get('/admin/banners/'),
   createBanner: (formData: FormData) =>

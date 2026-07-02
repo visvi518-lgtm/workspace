@@ -11,6 +11,7 @@ import HealthManagementPage from '@/pages/HealthManagementPage';
 import FreeBoardPage from '@/pages/FreeBoardPage';
 import MyPage from '@/pages/MyPage';
 import HealthChatPage from '@/pages/HealthChatPage';
+import RecommendationPage from '@/pages/RecommendationPage';
 import AdminPage from '@/pages/AdminPage';
 import OAuthCallbackPage from '@/pages/OAuthCallbackPage';
 import ForgotPasswordPage from '@/pages/ForgotPasswordPage';
@@ -71,6 +72,14 @@ export default function App() {
           element={
             <RequireAuth>
               <MyPage />
+            </RequireAuth>
+          }
+        />
+        <Route
+          path="/recommendation"
+          element={
+            <RequireAuth>
+              <RecommendationPage />
             </RequireAuth>
           }
         />

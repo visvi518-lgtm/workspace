@@ -7,7 +7,7 @@ from fastapi.middleware.cors import CORSMiddleware
 
 from sqlalchemy import text
 
-from app.api.routes import auth, board, health, chat, admin, banner
+from app.api.routes import auth, board, health, chat, admin, banner, recommendation, exercise_calorie
 from app.core.config import settings
 from app.core.database import Base, engine
 
@@ -21,17 +21,17 @@ async def lifespan(app: FastAPI):
     # Create tables
     Base.metadata.create_all(bind=engine)
 
-    # 신규 컬럼 마이그레이션 (이미 존재하면 무시)
-    with engine.connect() as conn:
-        for stmt in [
-            "ALTER TABLE posts ADD COLUMN crawl_status VARCHAR(20)",
-            "ALTER TABLE banners ADD COLUMN link_url VARCHAR(500)",
-        ]:
-            try:
+    # 신규 컬럼 마이그레이션 (이미 존재하면 무시, 커넥션 분리로 트랜잭션 격리)
+    for stmt in [
+        "ALTER TABLE posts ADD COLUMN crawl_status VARCHAR(20)",
+        "ALTER TABLE banners ADD COLUMN link_url VARCHAR(500)",
+    ]:
+        try:
+            with engine.connect() as conn:
                 conn.execute(text(stmt))
                 conn.commit()
-            except Exception:
-                pass
+        except Exception:
+            pass
 
     # Setup schedules
     from app.services.crawler import crawl_health, crawl_exercise
@@ -68,6 +68,8 @@ app.include_router(health.router, prefix="/api/v1")
 app.include_router(chat.router, prefix="/api/v1")
 app.include_router(admin.router, prefix="/api/v1")
 app.include_router(banner.router, prefix="/api/v1")
+app.include_router(recommendation.router, prefix="/api/v1")
+app.include_router(exercise_calorie.router, prefix="/api/v1")
 
 
 @app.get("/api/v1/health-check")

@@ -1,15 +1,15 @@
-import { useState } from 'react';
+import { useState, useMemo, useRef } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { Plus, ChevronDown, ChevronUp, CheckSquare, Trash2 } from 'lucide-react';
-import { healthApi } from '@/services/api';
+import { Plus, ChevronDown, ChevronUp, CheckSquare, Trash2, Search } from 'lucide-react';
+import { healthApi, recommendationApi } from '@/services/api';
 import { useAuthStore } from '@/store/authStore';
-import type { ExerciseLog, ExerciseItem } from '@/types';
+import type { ExerciseLog, ExerciseItem, ExerciseCalorie } from '@/types';
 import { format } from 'date-fns';
 import toast from 'react-hot-toast';
 
 const PURPOSE_OPTIONS = [
   { value: 'posture', label: '체형교정' },
-  { value: 'strength', label: '스트렝스' },
+  { value: 'strength', label: '근력향상' },
   { value: 'weight_management', label: '체중관리' },
 ];
 
@@ -21,11 +21,42 @@ export default function ExerciseTab() {
   const [form, setForm] = useState({ date: today, content: '', duration_minutes: 30, exercises: [] as ExerciseItem[] });
   const [newEx, setNewEx] = useState({ name: '', sets: '', reps: '', weight: '', duration_minutes: '' });
   const [expandedId, setExpandedId] = useState<number | null>(null);
+  const [showExDropdown, setShowExDropdown] = useState(false);
+  const nameInputRef = useRef<HTMLInputElement>(null);
 
   const { data: logs = [] } = useQuery<ExerciseLog[]>({
     queryKey: ['exerciseLogs'],
     queryFn: () => healthApi.getExerciseLogs().then((r) => r.data),
   });
+
+  const { data: exerciseCalories = [] } = useQuery<ExerciseCalorie[]>({
+    queryKey: ['exerciseCalories'],
+    queryFn: () => recommendationApi.getExerciseCalories().then((r) => r.data),
+    enabled: showForm,
+    staleTime: 5 * 60 * 1000,
+  });
+
+  const PURPOSE_CATEGORY: Record<string, string> = {
+    strength: '근력',
+    weight_management: '유산소',
+    posture: '기타',
+  };
+
+  const calDropdownList = useMemo(() => {
+    const q = newEx.name.trim().toLowerCase();
+    if (q) {
+      // 검색어 있으면 전체 종목에서 검색
+      return exerciseCalories
+        .filter((c) => c.name.toLowerCase().includes(q) || c.category.includes(q))
+        .slice(0, 10);
+    }
+    // 검색어 없으면 운동 목적에 맞는 카테고리 우선
+    const purposeCategory = PURPOSE_CATEGORY[user?.profile?.exercise_purpose ?? ''];
+    const list = purposeCategory
+      ? exerciseCalories.filter((c) => c.category === purposeCategory)
+      : exerciseCalories;
+    return list.slice(0, 10);
+  }, [exerciseCalories, newEx.name, user?.profile?.exercise_purpose]);
 
   const createMutation = useMutation({
     mutationFn: () => healthApi.createExerciseLog(form),
@@ -138,14 +169,62 @@ export default function ExerciseTab() {
             {/* Exercise items */}
             <div>
               <label className="text-xs font-medium text-gray-600 mb-2 block">운동 종목</label>
-              <div className="grid grid-cols-5 gap-1 mb-2">
-                {(['name', 'sets', 'reps', 'weight', 'duration_minutes'] as const).map((field) => (
+
+              {/* 종목명 검색 */}
+              <div className="relative mb-1">
+                <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-gray-300 pointer-events-none" />
+                <input
+                  ref={nameInputRef}
+                  type="text"
+                  value={newEx.name}
+                  onChange={(e) => {
+                    setNewEx({ ...newEx, name: e.target.value });
+                    setShowExDropdown(true);
+                  }}
+                  onFocus={() => setShowExDropdown(true)}
+                  onBlur={() => setTimeout(() => setShowExDropdown(false), 150)}
+                  placeholder="종목명 검색 또는 직접 입력"
+                  className="input-base text-sm pl-8 w-full"
+                />
+                {showExDropdown && calDropdownList.length > 0 && (
+                  <ul className="absolute z-20 left-0 right-0 top-full mt-1 bg-white border border-gray-200 rounded-xl shadow-lg max-h-48 overflow-y-auto">
+                    {!newEx.name.trim() && PURPOSE_CATEGORY[user?.profile?.exercise_purpose ?? ''] && (
+                      <li className="px-3 py-1.5 text-xs text-gray-400 bg-gray-50 border-b border-gray-100">
+                        {PURPOSE_CATEGORY[user!.profile!.exercise_purpose!]} 종목 · 검색하면 전체 표시
+                      </li>
+                    )}
+                    {calDropdownList.map((c) => (
+                      <li key={c.id}>
+                        <button
+                          type="button"
+                          onMouseDown={() => {
+                            setNewEx({ ...newEx, name: c.name });
+                            setShowExDropdown(false);
+                            nameInputRef.current?.blur();
+                          }}
+                          className="w-full text-left px-3 py-2 hover:bg-primary-50 flex items-center justify-between gap-2"
+                        >
+                          <div className="flex items-center gap-2 min-w-0">
+                            <span className="text-xs px-1.5 py-0.5 rounded bg-orange-100 text-orange-700 flex-shrink-0">{c.category}</span>
+                            <span className="text-sm text-gray-800 truncate">{c.name}</span>
+                          </div>
+                          <span className="text-xs text-gray-400 flex-shrink-0">MET {c.met}</span>
+                        </button>
+                      </li>
+                    ))}
+                  </ul>
+                )}
+              </div>
+
+              {/* 세트 / 횟수 / kg / 분 */}
+              <div className="grid grid-cols-4 gap-1 mb-2">
+                {(['sets', 'reps', 'weight', 'duration_minutes'] as const).map((field) => (
                   <input
                     key={field}
-                    type={field === 'name' ? 'text' : 'number'}
+                    type="number"
                     value={newEx[field]}
                     onChange={(e) => setNewEx({ ...newEx, [field]: e.target.value })}
-                    placeholder={({ name: '종목명', sets: '세트', reps: '횟수', weight: 'kg', duration_minutes: '분' })[field]}
+                    placeholder={({ sets: '세트', reps: '횟수', weight: 'kg', duration_minutes: '분' })[field]}
                     className="input-base text-sm py-1.5"
                     min={0}
                   />

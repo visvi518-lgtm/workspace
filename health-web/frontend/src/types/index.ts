@@ -144,6 +144,62 @@ export interface Banner {
   is_active?: boolean;
 }
 
+// ────────────── Recommendations ──────────────
+
+export type ExercisePurpose = 'posture' | 'strength' | 'weight_management';
+export type DietPurpose = 'loss' | 'gain' | 'maintain' | 'medical';
+export type Difficulty = 'beginner' | 'intermediate' | 'advanced';
+
+export interface RoutineExercise {
+  name: string;
+  sets: number | string;
+  reps: string;
+  rest: string;
+  notes?: string;
+}
+
+export interface NutrientGoal {
+  name: string;
+  target: string;
+  unit: string;
+  notes?: string;
+}
+
+export interface ExerciseRoutine {
+  id: number;
+  purpose: ExercisePurpose;
+  name: string;
+  description?: string;
+  difficulty?: Difficulty;
+  sessions_per_week: number;
+  exercises: RoutineExercise[];
+  order_idx?: number;
+  is_active?: boolean;
+}
+
+export interface DietRecommendation {
+  id: number;
+  purpose: DietPurpose;
+  name: string;
+  description?: string;
+  carb_ratio: number;
+  protein_ratio: number;
+  fat_ratio: number;
+  calorie_note?: string;
+  nutrients: NutrientGoal[];
+  order_idx?: number;
+  is_active?: boolean;
+}
+
+export interface ExerciseCalorie {
+  id: number;
+  name: string;
+  category: string;
+  met: number;
+  description?: string;
+  is_active?: boolean;
+}
+
 // ────────────── Admin ──────────────
 export type BanDuration = '3d' | '3w' | '3m' | '3y' | 'permanent';
 
