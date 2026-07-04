@@ -3,7 +3,7 @@ from urllib.parse import urlencode
 import secrets
 
 import httpx
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, BackgroundTasks, Depends, HTTPException, status
 from fastapi.responses import RedirectResponse
 from pydantic import BaseModel, EmailStr
 from sqlalchemy.orm import Session
@@ -168,9 +168,8 @@ class ResetPasswordRequest(BaseModel):
 
 
 @router.post("/forgot-password")
-def forgot_password(data: ForgotPasswordRequest, db: Session = Depends(get_db)):
+def forgot_password(data: ForgotPasswordRequest, background_tasks: BackgroundTasks, db: Session = Depends(get_db)):
     user = db.query(User).filter(User.email == data.email).first()
-    # 유저가 없어도 동일한 응답 (이메일 노출 방지)
     if user:
         from datetime import timedelta
         from app.core.email import send_password_reset_email
@@ -179,10 +178,7 @@ def forgot_password(data: ForgotPasswordRequest, db: Session = Depends(get_db)):
             expires_delta=timedelta(hours=1),
         )
         reset_url = f"{settings.FRONTEND_URL}/reset-password?token={reset_token}"
-        try:
-            send_password_reset_email(user.email, reset_url)
-        except Exception as e:
-            raise HTTPException(status_code=500, detail=f"이메일 전송에 실패했습니다: {str(e)}")
+        background_tasks.add_task(send_password_reset_email, user.email, reset_url)
     return {"message": "입력하신 이메일로 재설정 링크를 발송했습니다."}
 
 
