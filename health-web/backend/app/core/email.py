@@ -1,24 +1,33 @@
+import logging
 import smtplib
 from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
 
 from app.core.config import settings
 
+logger = logging.getLogger(__name__)
+
 
 def send_email(to: str, subject: str, html: str) -> None:
     if not settings.SMTP_USER or not settings.SMTP_PASSWORD:
-        raise RuntimeError("SMTP 설정이 되어 있지 않습니다. .env에 SMTP_USER, SMTP_PASSWORD를 입력해 주세요.")
+        logger.error("SMTP 설정 누락: SMTP_USER 또는 SMTP_PASSWORD가 비어 있습니다.")
+        return
 
-    msg = MIMEMultipart("alternative")
-    msg["Subject"] = subject
-    msg["From"] = settings.SMTP_USER
-    msg["To"] = to
-    msg.attach(MIMEText(html, "html"))
+    try:
+        msg = MIMEMultipart("alternative")
+        msg["Subject"] = subject
+        msg["From"] = settings.SMTP_USER
+        msg["To"] = to
+        msg.attach(MIMEText(html, "html"))
 
-    with smtplib.SMTP(settings.SMTP_HOST, settings.SMTP_PORT) as server:
-        server.starttls()
-        server.login(settings.SMTP_USER, settings.SMTP_PASSWORD)
-        server.sendmail(settings.SMTP_USER, to, msg.as_string())
+        with smtplib.SMTP(settings.SMTP_HOST, settings.SMTP_PORT) as server:
+            server.starttls()
+            server.login(settings.SMTP_USER, settings.SMTP_PASSWORD)
+            server.sendmail(settings.SMTP_USER, to, msg.as_string())
+
+        logger.info("이메일 발송 완료: %s → %s", subject, to)
+    except Exception:
+        logger.exception("이메일 발송 실패: to=%s subject=%s", to, subject)
 
 
 def send_password_reset_email(to: str, reset_url: str) -> None:
